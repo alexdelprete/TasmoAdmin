@@ -1503,6 +1503,7 @@ $icon-sort-down: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' v
 
 @media (min-width: 40em) {
   #{$ta} .devices-page .devices-table-panel .table-responsive {
+    position: relative;
     max-height: var(--ta-device-list-max-height, none);
     overflow: auto;
     overscroll-behavior: contain;
