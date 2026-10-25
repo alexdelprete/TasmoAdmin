@@ -74,6 +74,7 @@ onI18nReady(function () {
   updateAllStatus();
 
   initCommandHelper();
+  initDeviceListViewport();
 
   $(".ignoreProtections").on("change", function (e) {
     clearTimeout(ignoreProtectionsTimer);
@@ -972,6 +973,46 @@ function deviceTools() {
       $(this).parent().removeClass("dont-update").text(oriVal);
     }
   });
+}
+
+// Keep the toolbar and the table header in view: the device list gets the
+// height left in the window and scrolls on its own, with a sticky header row.
+function fitDeviceListToViewport() {
+  const list = document.querySelector(
+    ".devices-page .devices-table-panel .table-responsive",
+  );
+  if (!list) {
+    return;
+  }
+
+  if (window.matchMedia("(max-width: 39.9375em)").matches) {
+    list.style.removeProperty("--ta-device-list-max-height");
+    return;
+  }
+
+  const footer = document.querySelector("footer");
+  const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
+  const panel = list.closest(".devices-table-panel");
+  const panelPadding = panel
+    ? parseFloat(window.getComputedStyle(panel).paddingBottom) || 0
+    : 0;
+  const top = list.getBoundingClientRect().top + window.scrollY;
+  const available = window.innerHeight - top - footerHeight - panelPadding - 12;
+
+  list.style.setProperty(
+    "--ta-device-list-max-height",
+    `${Math.max(240, Math.floor(available))}px`,
+  );
+}
+
+function initDeviceListViewport() {
+  fitDeviceListToViewport();
+  window.addEventListener("resize", fitDeviceListToViewport);
+
+  const toolbar = document.querySelector(".devices-page .devices-toolbar");
+  if (toolbar && typeof ResizeObserver === "function") {
+    new ResizeObserver(fitDeviceListToViewport).observe(toolbar);
+  }
 }
 
 function getWifiLevel(rssi) {

@@ -29,8 +29,9 @@ $loadingIndicator = "<span class='loader' role='status' aria-label='{$loadingTex
                        value='select_all'
                        id="select_all"
                        name='select_all'
+                       aria-label="<?php echo __('TABLE_HEAD_ALL', 'DEVICES'); ?>"
                 >
-                <label class="form-check-label" for="select_all">
+                <label class="form-check-label visually-hidden" for="select_all">
                     <?php echo __('TABLE_HEAD_ALL', 'DEVICES'); ?>
                 </label>
             </div>
@@ -44,10 +45,7 @@ $loadingIndicator = "<span class='loader' role='status' aria-label='{$loadingTex
         <th data-column-id='rssi' data-column-label='<?php echo __('TABLE_HEAD_WIFI', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col data-tablesaw-sortable-numeric><?php echo __('TABLE_HEAD_WIFI', 'DEVICES'); ?></th>
         <th data-column-id='version' data-column-label='<?php echo __('TABLE_HEAD_VERSION', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col><?php echo __('TABLE_HEAD_VERSION', 'DEVICES'); ?></th>
         <th data-column-id='runtime' data-column-label='<?php echo __('TABLE_HEAD_RUNTIME', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col><?php echo __('TABLE_HEAD_RUNTIME', 'DEVICES'); ?></th>
-        <th data-column-id='energyPower' data-column-label='<?php echo __('TABLE_HEAD_ENERGY', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col class='energyPower hidden'><?php echo __('TABLE_HEAD_ENERGY', 'DEVICES').' '.__(
-            'TABLE_HEAD_ENERGY_DETAIL',
-            'DEVICES'
-        ); ?></th>
+        <th data-column-id='energyPower' data-column-label='<?php echo __('TABLE_HEAD_ENERGY', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col class='energyPower hidden' title='<?php echo __('TABLE_HEAD_ENERGY_DETAIL', 'DEVICES'); ?>'><?php echo __('TABLE_HEAD_ENERGY', 'DEVICES'); ?></th>
         <th data-column-id='temp' data-column-label='<?php echo __('TABLE_HEAD_TEMP', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col class='temp hidden'><?php echo __('TABLE_HEAD_TEMP', 'DEVICES'); ?></th>
         <th data-column-id='humidity' data-column-label='<?php echo __('TABLE_HEAD_HUMIDITY', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col class='humidity hidden'><?php echo __(
             'TABLE_HEAD_HUMIDITY',
