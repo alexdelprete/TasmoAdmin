@@ -154,6 +154,14 @@ body.nightmode {
 
 // Page
 
+:root {
+  color-scheme: light;
+}
+
+body.nightmode {
+  color-scheme: dark;
+}
+
 #{$ta} {
   background-color: var(--ta-page) !important;
   color: var(--ta-text) !important;
@@ -831,6 +839,17 @@ body.nightmode .modal .btn-close {
 
 #{$ta} .modal-backdrop.show {
   opacity: 0.6;
+}
+
+#{$ta} #deleteDeviceModal .btn-ok {
+  background-color: var(--ta-red) !important;
+  border-color: var(--ta-red) !important;
+  color: var(--ta-on-red) !important;
+}
+
+#{$ta} #deleteDeviceModal .btn-ok:hover {
+  background-color: var(--ta-red-hover) !important;
+  border-color: var(--ta-red-hover) !important;
 }
 
 // Start page tiles
