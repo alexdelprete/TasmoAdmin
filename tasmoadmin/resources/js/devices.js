@@ -939,6 +939,44 @@ function deviceTools() {
   });
 }
 
+function getWifiLevel(rssi) {
+  if (rssi === undefined || rssi === null) {
+    return 0;
+  }
+  if (rssi >= 80) {
+    return 4;
+  }
+  if (rssi >= 60) {
+    return 3;
+  }
+  if (rssi >= 40) {
+    return 2;
+  }
+  return rssi > 0 ? 1 : 0;
+}
+
+function buildWifiMarkup(wifi, summary) {
+  const bars = $("<i>", {
+    class: "wifi-bars",
+    "aria-hidden": "true",
+    "data-level": getWifiLevel(wifi.rssi),
+  }).append("<i></i><i></i><i></i><i></i>");
+  const text = $("<b>", { class: "wifi-text" }).append(
+    $("<b>", { class: "wifi-pct" }).text(summary),
+  );
+  if (wifi.ssid || wifi.channel) {
+    const meta = $("<small>", { class: "wifi-meta" });
+    if (wifi.ssid) {
+      meta.append($("<em>", { class: "wifi-ssid" }).text(wifi.ssid));
+    }
+    if (wifi.channel) {
+      meta.append($("<em>", { class: "wifi-ch" }).text(`ch ${wifi.channel}`));
+    }
+    text.append(meta);
+  }
+  return [bars, text];
+}
+
 function updateRow(row, data, device_status) {
   const id = $(row).data("device_id");
   let device_protect_on = $(row).data("device_protect_on");
@@ -949,11 +987,7 @@ function updateRow(row, data, device_status) {
     const wifiDisplay = getWifiDisplayInfo(data);
     const rssiSpan = $(row).find(".rssi span");
 
-    rssiSpan.empty().text(wifiDisplay.summary);
-    if (wifiDisplay.details !== "") {
-      rssiSpan.append("<br>");
-      rssiSpan.append($("<small>").text(wifiDisplay.details));
-    }
+    rssiSpan.empty().append(buildWifiMarkup(data.wifi, wifiDisplay.summary));
 
     if (data.wifi.rssi !== undefined && data.wifi.rssi !== null) {
       rssiSpan.attr("data-sort-number", data.wifi.rssi);
