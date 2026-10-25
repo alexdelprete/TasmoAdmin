@@ -63,6 +63,7 @@ use Selective\Container\Container;
 use TasmoAdmin\Config;
 use TasmoAdmin\Helper\EnvironmentHelper;
 use TasmoAdmin\Helper\JsonLanguageHelper;
+use TasmoAdmin\Helper\SupportedLanguageHelper;
 use Whoops\Handler\PrettyPageHandler;
 use Whoops\Run;
 
@@ -87,6 +88,10 @@ $i18n->setFallbackLang('en');
 $i18n->setPrefix('__L');
 $i18n->setSectionSeparator('_');
 $i18n->setMergeFallback(true); // make keys available from the fallback language
+$configuredLanguage = (string) $Config->read('language');
+if (array_key_exists($configuredLanguage, SupportedLanguageHelper::getSupportedLanguages())) {
+    $i18n->setForcedLang($configuredLanguage);
+}
 $i18n->init();
 
 $lang = $i18n->getAppliedLang();

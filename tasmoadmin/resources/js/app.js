@@ -100,14 +100,7 @@ export function refreshTooltips(
 if (!window.__tasmoAppInitialized) {
   window.__tasmoAppInitialized = true;
 
-  window.addEventListener("storage", function (event) {
-    if (event.key === NIGHTMODE_OVERRIDE_KEY) {
-      checkNightmode(config.nightmodeconfig || "auto");
-    }
-  });
-
   onI18nReady(function () {
-    rememberInitialNightmode(config.nightmodeconfig || "auto");
     checkNightmode(config.nightmodeconfig || "auto");
     initNightmodeToggle();
     checkForUpdate(true);
@@ -581,25 +574,6 @@ export function getGas(data, joinString) {
   }
 
   return gas.join(joinString);
-}
-
-// The theme only changes when the user flips the switch: on the first visit
-// the state rendered by the server is stored as the user's choice, so the
-// time-based automatic mode never switches it again on later pages.
-function rememberInitialNightmode(config) {
-  try {
-    const override = normalizeNightmodeOverride(
-      window.localStorage.getItem(NIGHTMODE_OVERRIDE_KEY),
-    );
-    if (override === null && config !== "disable") {
-      window.localStorage.setItem(
-        NIGHTMODE_OVERRIDE_KEY,
-        document.body.classList.contains("nightmode") ? "night" : "day",
-      );
-    }
-  } catch (error) {
-    console.warn("[APP][nightmode] localStorage not available", error);
-  }
 }
 
 function checkNightmode(config) {

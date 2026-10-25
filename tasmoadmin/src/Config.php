@@ -30,6 +30,7 @@ class Config
         'update_automatic_lang' => 'tasmota-sensors',
         'update_automatic_lang_esp32' => 'tasmota32',
         'nightmode' => 'auto',
+        'language' => '',
         'login' => '1',
         'scan_from_ip' => '192.168.178.2',
         'scan_to_ip' => '192.168.178.254',
