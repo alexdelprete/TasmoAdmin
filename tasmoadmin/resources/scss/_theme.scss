@@ -1336,3 +1336,20 @@ $icon-x: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='
   display: block;
   margin-top: 4px;
 }
+
+#{$ta} .devices-page .device-search-group {
+  width: 100%;
+  max-width: none !important;
+}
+
+@media (min-width: 992px) {
+  #{$ta} .devices-page .devices-toolbar-row > .devices-toolbar-search {
+    flex: 0 1 420px !important;
+    width: auto !important;
+    min-width: 240px;
+  }
+
+  #{$ta} .devices-page .devices-toolbar-row > .devices-toolbar-lock-col {
+    margin-left: 0 !important;
+  }
+}
