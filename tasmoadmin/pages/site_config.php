@@ -8,6 +8,7 @@ use TasmoAdmin\Helper\GuzzleFactory;
 use TasmoAdmin\Helper\HtmlAttributeHelper;
 use TasmoAdmin\Helper\LoginHelper;
 use TasmoAdmin\Helper\RequestHelper;
+use TasmoAdmin\Helper\SupportedLanguageHelper;
 use TasmoAdmin\Helper\TasmotaHelper;
 use TasmoAdmin\Helper\TasmotaOtaScraper;
 
@@ -45,8 +46,12 @@ if (isset($_POST['clean_temp_cache'])) {
         $settings['confirm_device_toggles'] = '0';
     }
 
-    if (!isset($settings['nightmode']) || 'auto' !== $settings['nightmode']) {
+    if (!in_array($settings['nightmode'] ?? '', ['disable', 'always', 'auto'], true)) {
         $settings['nightmode'] = 'disable';
+    }
+
+    if (!array_key_exists($settings['language'] ?? '', SupportedLanguageHelper::getSupportedLanguages())) {
+        $settings['language'] = '';
     }
 
     if (!isset($settings['update_fe_check'])) {
@@ -216,6 +221,21 @@ $autoFirmwareChannels = ['stable', 'dev'];
 							<?php echo __('CONFIG_HOMEPAGE_DEVICES', 'USER_CONFIG'); ?>
 						</option>
 
+					</select>
+				</div>
+				<div class="col col-12 col-sm-6">
+					<label for="language">
+						<?php echo __('CONFIG_LANGUAGE', 'USER_CONFIG'); ?>
+					</label>
+					<select class="form-control form-select" id="language" name='language'>
+						<option value='' <?php echo HtmlAttributeHelper::selected('' === (string) ($config['language'] ?? '')); ?>>
+							<?php echo __('CONFIG_LANGUAGE_AUTO', 'USER_CONFIG'); ?>
+						</option>
+						<?php foreach (SupportedLanguageHelper::getSupportedLanguages() as $languageCode => $languageName) { ?>
+							<option value='<?php echo $languageCode; ?>' <?php echo HtmlAttributeHelper::selected($languageCode === (string) ($config['language'] ?? '')); ?>>
+								<?php echo $languageName; ?>
+							</option>
+						<?php } ?>
 					</select>
 				</div>
 			</div>
@@ -400,26 +420,23 @@ $autoFirmwareChannels = ['stable', 'dev'];
 					</select>
 				</div>
 				<div class="col col-12 col-sm-6">
-					<label class="settings-label-spacer" for="cb_nightmode" aria-hidden="true">&nbsp;</label>
-					<div class="settings-option settings-option-toggle">
-						<div class="settings-option-copy">
-							<span class="settings-option-title">
-								<?php echo __('CONFIG_NIGHTMODE', 'USER_CONFIG'); ?>
-							</span>
-							<small class="d-block text-body-secondary">
-								<?php echo __('CONFIG_NIGHTMODE_AUTO', 'USER_CONFIG'); ?> /
-								<?php echo __('CONFIG_NIGHTMODE_DISABLE', 'USER_CONFIG'); ?>
-							</small>
-						</div>
-						<label class="form-switch" for="cb_nightmode">
-							<input type="checkbox"
-								   value="auto"
-								   id="cb_nightmode"
-								   name='nightmode' <?php echo 'disable' !== $config['nightmode']
-                                ? 'checked="checked"' : ''; ?>>
-							<i aria-hidden="true"></i>
-						</label>
-					</div>
+					<label for="nightmode">
+						<?php echo __('CONFIG_NIGHTMODE', 'USER_CONFIG'); ?>
+					</label>
+					<select class="form-control form-select" id="nightmode" name='nightmode' aria-describedby="nightmodeHelp">
+						<option value='disable' <?php echo HtmlAttributeHelper::selected('disable' === $config['nightmode']); ?>>
+							<?php echo __('CONFIG_NIGHTMODE_DISABLE', 'USER_CONFIG'); ?>
+						</option>
+						<option value='always' <?php echo HtmlAttributeHelper::selected('always' === $config['nightmode']); ?>>
+							<?php echo __('CONFIG_NIGHTMODE_ALWAYS', 'USER_CONFIG'); ?>
+						</option>
+						<option value='auto' <?php echo HtmlAttributeHelper::selected('auto' === $config['nightmode']); ?>>
+							<?php echo __('CONFIG_NIGHTMODE_AUTO', 'USER_CONFIG'); ?>
+						</option>
+					</select>
+					<small class="form-text text-body-secondary" id="nightmodeHelp">
+						<?php echo __('CONFIG_NIGHTMODE_HELP', 'USER_CONFIG'); ?>
+					</small>
 				</div>
 			</div>
 

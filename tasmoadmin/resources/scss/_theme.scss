@@ -1470,3 +1470,24 @@ $icon-alert: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewB
 #{$ta} .devices-page .devices-batch-add-col {
   margin-right: 8px;
 }
+
+// Help menu at the far right of the top bar
+
+$icon-help: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9.5'/%3E%3Cpath d='M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E";
+
+.ta-icon-help { -webkit-mask-image: url("#{$icon-help}"); mask-image: url("#{$icon-help}"); }
+
+#{$ta} .navbar .header-help {
+  margin-left: 0.5rem;
+}
+
+#{$ta} .navbar .header-help .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+#{$ta} .navbar .header-help .ta-icon-help {
+  width: 20px;
+  height: 20px;
+}

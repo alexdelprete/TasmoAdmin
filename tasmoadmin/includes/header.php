@@ -2,35 +2,11 @@
 <?php
 
 use TasmoAdmin\Helper\RequestHelper;
-use TasmoAdmin\Helper\SupportedLanguageHelper;
 use TasmoAdmin\Helper\UrlHelper;
 use TasmoAdmin\Helper\ViewHelper;
 
 $urlHelper = $container->get(UrlHelper::class);
 $viewHelper = $container->get(ViewHelper::class);
-
-ob_start();
-?>
-<div class="theme-toggle-group" aria-label="Theme toggle">
-	<span class="theme-toggle-side theme-toggle-side-sun" aria-hidden="true">
-		<i class="fas fa-sun"></i>
-	</span>
-	<button type="button"
-			class="theme-toggle navbar-theme-toggle js-theme-toggle"
-			aria-label="Toggle day and night mode"
-			aria-pressed="false"
-			title="Toggle day and night mode"
-	>
-		<span class="theme-toggle-track" aria-hidden="true">
-			<span class="theme-toggle-thumb"></span>
-		</span>
-	</button>
-	<span class="theme-toggle-side theme-toggle-side-moon" aria-hidden="true">
-		<i class="fas fa-moon"></i>
-	</span>
-</div>
-<?php
-$themeToggleMarkup = ob_get_clean();
 
 ?>
 <html lang="<?php echo $lang; ?>" xmlns="http://www.w3.org/1999/html">
@@ -87,11 +63,12 @@ $themeToggleMarkup = ob_get_clean();
 		<script>
 			(function () {
 				try {
-					var mode = window.localStorage.getItem('nightmode_override');
-					if (mode === 'night' || mode === 'day') {
-						document.body.classList.toggle('nightmode', mode === 'night');
-					}
+					window.localStorage.removeItem('nightmode_override');
 				} catch (e) {}
+				if (<?php echo json_encode((string) $Config->read('nightmode')); ?> === 'auto') {
+					var hour = new Date().getHours();
+					document.body.classList.toggle('nightmode', hour >= 18 || hour <= 8);
+				}
 			})();
 		</script>
 		<header>
@@ -101,9 +78,6 @@ $themeToggleMarkup = ob_get_clean();
 					<a class="navbar-brand py-0 logo" href='<?php echo _BASEURL_.$Config->read('homepage'); ?>'>
 						<img src='<?php echo _RESOURCESURL_; ?>img/logo.svg' height='50px'/>
 					</a>
-					<div class="mobile-header-actions d-sm-none ms-auto">
-						<?php echo $themeToggleMarkup; ?>
-					</div>
 					<button class="navbar-toggler"
 							type="button"
 							data-bs-toggle="collapse"
@@ -187,6 +161,26 @@ $themeToggleMarkup = ob_get_clean();
 								</a>
 							</li>
 						<?php } ?>
+					</ul>
+					<?php if ($loggedin) { ?>
+						<?php if ('1' == $Config->read('login')) { ?>
+							<div class="my-2 my-lg-0 ms-3">
+								<form method="post" action="<?php echo _BASEURL_; ?>logout">
+									<?php echo RequestHelper::csrfTokenField(); ?>
+									<button class="error border-0 bg-transparent p-0"
+											type="submit"
+											title="<?php echo __('LOGOUT', 'NAVI'); ?>"
+									>
+									<i class='fas fa-sign-out-alt fa-lg'></i>
+									<span class='d-inline d-sm-none'>
+										<?php echo __('LOGOUT', 'NAVI'); ?>
+									</span>
+									</button>
+								</form>
+							</div>
+						<?php } ?>
+					<?php } ?>
+					<ul class="navbar-nav header-help">
 						<li class="nav-item dropdown">
 							<a class="nav-link dropdown-toggle <?php echo in_array(
 							    $page,
@@ -197,13 +191,15 @@ $themeToggleMarkup = ob_get_clean();
 							) ? 'active' : ''; ?>"
 							   href="#"
 							   id="helpDropdown"
+							   title="<?php echo __('HELP', 'NAVI'); ?>"
 							   data-bs-toggle="dropdown"
 							   aria-haspopup="false"
 							   aria-expanded="false"
 							>
-								<i class='fa fa-question-circle'></i>
+								<span class="ta-icon ta-icon-help" aria-hidden="true"></span>
+								<span class="visually-hidden"><?php echo __('HELP', 'NAVI'); ?></span>
 							</a>
-							<div class="dropdown-menu bg-dark" aria-labelledby="helpDropdown">
+							<div class="dropdown-menu dropdown-menu-end bg-dark" aria-labelledby="helpDropdown">
 								<?php if ($docker) { ?>
 									<a class="dropdown-item nav-link <?php echo 'selfupdate' == $page ? 'active'
 							: ''; ?>"
@@ -265,40 +261,6 @@ $themeToggleMarkup = ob_get_clean();
 							</div>
 						</li>
 					</ul>
-					<div class="header-actions ms-auto">
-						<div class="desktop-theme-toggle d-none d-sm-flex">
-							<?php echo $themeToggleMarkup; ?>
-						</div>
-						<div class='my-2 my-sm-0 language-switch-holder'>
-							<select name='language-switch' id='language-switch' class='form-select'>
-								<?php foreach (SupportedLanguageHelper::getSupportedLanguages() as $l => $name) { ?>
-									<option value='<?php echo $l; ?>'
-										<?php echo $lang === $l ? 'selected="selected"' : ''; ?>
-									>
-										<?php echo $name; ?>
-									</option>
-								<?php } ?>
-							</select>
-						</div>
-					</div>
-					<?php if ($loggedin) { ?>
-						<?php if ('1' == $Config->read('login')) { ?>
-							<div class="my-2 my-lg-0 ms-3">
-								<form method="post" action="<?php echo _BASEURL_; ?>logout">
-									<?php echo RequestHelper::csrfTokenField(); ?>
-									<button class="error border-0 bg-transparent p-0"
-											type="submit"
-											title="<?php echo __('LOGOUT', 'NAVI'); ?>"
-									>
-									<i class='fas fa-sign-out-alt fa-lg'></i>
-									<span class='d-inline d-sm-none'>
-										<?php echo __('LOGOUT', 'NAVI'); ?>
-									</span>
-									</button>
-								</form>
-							</div>
-						<?php } ?>
-					<?php } ?>
 				</div>
 				</div>
 			</nav>
