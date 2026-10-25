@@ -46,7 +46,7 @@ if (isset($_POST['clean_temp_cache'])) {
         $settings['confirm_device_toggles'] = '0';
     }
 
-    if (!in_array($settings['nightmode'] ?? '', ['disable', 'always', 'auto'], true)) {
+    if (!in_array($settings['nightmode'] ?? '', ['disable', 'always', 'system', 'auto'], true)) {
         $settings['nightmode'] = 'disable';
     }
 
@@ -429,6 +429,9 @@ $autoFirmwareChannels = ['stable', 'dev'];
 						</option>
 						<option value='always' <?php echo HtmlAttributeHelper::selected('always' === $config['nightmode']); ?>>
 							<?php echo __('CONFIG_NIGHTMODE_ALWAYS', 'USER_CONFIG'); ?>
+						</option>
+						<option value='system' <?php echo HtmlAttributeHelper::selected('system' === $config['nightmode']); ?>>
+							<?php echo __('CONFIG_NIGHTMODE_SYSTEM', 'USER_CONFIG'); ?>
 						</option>
 						<option value='auto' <?php echo HtmlAttributeHelper::selected('auto' === $config['nightmode']); ?>>
 							<?php echo __('CONFIG_NIGHTMODE_AUTO', 'USER_CONFIG'); ?>

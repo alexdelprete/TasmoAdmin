@@ -50,3 +50,11 @@ test("normalizeNightmodeOverride accepts only day and night", () => {
   assert.equal(normalizeNightmodeOverride("night"), "night");
   assert.equal(normalizeNightmodeOverride("auto"), null);
 });
+
+test("system nightmode follows the browser colour scheme", () => {
+  assert.equal(resolveNightmodeEnabled("system", null, new Date(), true), true);
+  assert.equal(
+    resolveNightmodeEnabled("system", null, new Date(), false),
+    false,
+  );
+});

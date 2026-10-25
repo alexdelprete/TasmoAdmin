@@ -18,6 +18,7 @@ window.sonoff = sonoff;
 
 let nightmode = false;
 let nightmodeTimer;
+let colorSchemeListener = null;
 
 const lang = $("html").attr("lang");
 const i18nfile = `${config.base_url}actions?i18n=1&lang=${encodeURIComponent(lang)}`;
@@ -581,7 +582,23 @@ function checkNightmode(config) {
   const override = normalizeNightmodeOverride(
     window.localStorage.getItem(NIGHTMODE_OVERRIDE_KEY),
   );
-  const isNightmodeEnabled = resolveNightmodeEnabled(config, override);
+  const colorSchemeQuery =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-color-scheme: dark)")
+      : null;
+  const isNightmodeEnabled = resolveNightmodeEnabled(
+    config,
+    override,
+    new Date(),
+    colorSchemeQuery !== null && colorSchemeQuery.matches,
+  );
+
+  if (config === "system" && colorSchemeQuery && !colorSchemeListener) {
+    colorSchemeListener = function () {
+      checkNightmode(config);
+    };
+    colorSchemeQuery.addEventListener("change", colorSchemeListener);
+  }
 
   clearTimeout(nightmodeTimer);
 
