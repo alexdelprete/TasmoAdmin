@@ -15,8 +15,10 @@ $power-icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewB
 $sensor-icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='5'/%3E%3Ccircle cx='12' cy='12' r='1.5' fill='black'/%3E%3C/svg%3E";
 
 :root {
-  --ta-font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --ta-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  // Both fonts are bundled (@fontsource, SIL Open Font License) and served by
+  // TasmoAdmin itself, so every system renders the same text.
+  --ta-font: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --ta-mono: Inconsolata, Consolas, ui-monospace, monospace;
   --ta-radius: 10px;
   --ta-radius-lg: 14px;
 
