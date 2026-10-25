@@ -1648,3 +1648,13 @@ $icon-sort-down: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' v
   min-width: 36px;
   height: 36px;
 }
+
+// The Name label is centred like the others (the names below stay left-aligned)
+
+#{$ta} .devices-page #device-list > thead > tr > th[data-column-id="name"] {
+  text-align: center;
+}
+
+#{$ta} .devices-page #device-list th[data-column-id="name"] .tablesaw-sortable-btn {
+  justify-content: center;
+}
