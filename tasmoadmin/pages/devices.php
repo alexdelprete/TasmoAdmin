@@ -94,7 +94,8 @@ if (isset($_POST['batch_action'], $_POST['device_ids'])) {
 									data-bs-toggle="dropdown"
 									aria-expanded="false"
 							>
-								<?php echo __('VISIBLE_COLUMNS', 'DEVICES'); ?>
+								<span class="ta-icon ta-icon-columns" aria-hidden="true"></span>
+								<span><?php echo __('VISIBLE_COLUMNS', 'DEVICES'); ?></span>
 							</button>
 							<div class="dropdown-menu p-3 device-columns-menu"
 								 aria-labelledby="deviceColumnsMenuButton"
