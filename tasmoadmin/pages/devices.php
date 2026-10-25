@@ -102,7 +102,7 @@ if (isset($_POST['batch_action'], $_POST['device_ids'])) {
 						</div>
 					</div>
 					<?php if (1 == $Config->read('show_search')) { ?>
-						<div class="col col-12 col-lg-5 devices-toolbar-search">
+						<div class="col col-12 col-lg-3 devices-toolbar-search">
 							<div class="input-group device-search-group">
 								<input type="text"
 									   name="searchterm"
@@ -116,7 +116,48 @@ if (isset($_POST['batch_action'], $_POST['device_ids'])) {
 							</div>
 						</div>
 					<?php } ?>
-						<div class="col col-12 col-lg-auto ms-lg-auto devices-toolbar-lock-col">
+					<div class="col col-12 col-lg-auto devices-batch-select-col">
+						<select class='form-select batchActionSelect'
+								name='batch_action_select'
+								form='devices-batch-form'
+								aria-label="<?php echo __('PLEASE_SELECT'); ?>"
+						>
+							<option value=''><?php echo __('PLEASE_SELECT'); ?></option>
+							<option value='command'><?php echo __('BTN_COMMAND', 'DEVICES'); ?></option>
+							<option value='backup'><?php echo __('BATCH_BACKUP_CREATE', 'BACKUP'); ?></option>
+							<option value='restore'><?php echo __('BATCH_BACKUP_RESTORE', 'BACKUP'); ?></option>
+							<option value='restart'><?php echo __('RESTART_SELECTED', 'DEVICES'); ?></option>
+							<option value='delete'><?php echo __('DELETE_SELECTED', 'DEVICES'); ?></option>
+						</select>
+					</div>
+					<div class="col col-12 col-lg batchActionCommandWrapper devices-batch-command-col d-none">
+						<input type='text'
+							   name='command'
+							   form='devices-batch-form'
+							   class='form-control batchActionCommandInput'
+							   placeholder="<?php echo __('CB_COMMAND', 'DEVICES'); ?>"
+						>
+					</div>
+					<div class="col col-12 col-lg batchActionFileWrapper devices-batch-command-col d-none">
+						<input type='file'
+							   name='restore_backup'
+							   form='devices-batch-form'
+							   class='form-control batchActionFileInput'
+							   accept='.dmp'
+						>
+						<small class="form-text text-body-secondary"><?php echo __('RESTORE_WARNING', 'BACKUP'); ?></small>
+					</div>
+					<div class="col col-12 col-sm-auto devices-batch-submit-col">
+						<button type='button' form='devices-batch-form' class='btn btn-primary applyBatchAction w-100' disabled>
+							<?php echo __('PLEASE_SELECT'); ?>
+						</button>
+					</div>
+					<div class="col col-12 col-lg-auto ms-lg-auto devices-batch-add-col">
+						<a href='<?php echo _BASEURL_; ?>device_action/add' class="btn btn-primary w-100">
+							<?php echo __('TABLE_HEAD_NEW_DEVICE', 'DEVICES'); ?>
+						</a>
+					</div>
+						<div class="col col-12 col-lg-auto devices-toolbar-lock-col">
 						<div class="form-check ps-0 devices-protection-toggle">
 							<input type="checkbox"
 								   class="form-check-input ignoreProtections d-none"
@@ -131,9 +172,12 @@ if (isset($_POST['batch_action'], $_POST['device_ids'])) {
 							</label>
 						</div>
 					</div>
+					<div class="col col-12 devices-batch-feedback-col">
+						<small class="form-text batchActionFeedback d-none"></small>
+					</div>
 				</div>
 			</div>
-            <form method='post' action='<?php echo _BASEURL_; ?>devices' class='devices-batch-form' enctype='multipart/form-data'>
+            <form method='post' action='<?php echo _BASEURL_; ?>devices' class='devices-batch-form' id='devices-batch-form' enctype='multipart/form-data'>
                 <?php echo RequestHelper::csrfTokenField(); ?>
                 <input type='hidden' name='batch_action' class='batchActionField' value=''>
                 <div class="devices-panel devices-table-panel">
@@ -146,51 +190,6 @@ if (isset($_POST['batch_action'], $_POST['device_ids'])) {
 		    include 'elements/devices_table.php';
 		    ?>
 					</div>
-                </div>
-                <div class="devices-panel devices-batch-panel">
-                    <div class='row g-3 align-items-end devices-batch-row'>
-                        <div class="col col-12 col-lg-auto devices-batch-select-col">
-                            <select class='form-select batchActionSelect'
-                                    name='batch_action_select'
-                                    aria-label="<?php echo __('PLEASE_SELECT'); ?>"
-                            >
-                                <option value=''><?php echo __('PLEASE_SELECT'); ?></option>
-                                <option value='command'><?php echo __('BTN_COMMAND', 'DEVICES'); ?></option>
-                                <option value='backup'><?php echo __('BATCH_BACKUP_CREATE', 'BACKUP'); ?></option>
-                                <option value='restore'><?php echo __('BATCH_BACKUP_RESTORE', 'BACKUP'); ?></option>
-                                <option value='restart'><?php echo __('RESTART_SELECTED', 'DEVICES'); ?></option>
-                                <option value='delete'><?php echo __('DELETE_SELECTED', 'DEVICES'); ?></option>
-                            </select>
-                        </div>
-                        <div class="col col-12 col-lg batchActionCommandWrapper devices-batch-command-col d-none">
-                            <input type='text'
-                                   name='command'
-                                   class='form-control batchActionCommandInput'
-                                   placeholder="<?php echo __('CB_COMMAND', 'DEVICES'); ?>"
-                            >
-                        </div>
-                        <div class="col col-12 col-lg batchActionFileWrapper devices-batch-command-col d-none">
-                            <input type='file'
-                                   name='restore_backup'
-                                   class='form-control batchActionFileInput'
-                                   accept='.dmp'
-                            >
-                            <small class="form-text text-body-secondary"><?php echo __('RESTORE_WARNING', 'BACKUP'); ?></small>
-                        </div>
-                        <div class="col col-12 col-sm-auto devices-batch-submit-col">
-                            <button type='button' class='btn btn-primary applyBatchAction w-100' disabled>
-                                <?php echo __('PLEASE_SELECT'); ?>
-                            </button>
-                        </div>
-                        <div class="col col-12 col-lg-auto ms-lg-auto devices-batch-add-col">
-                            <a href='<?php echo _BASEURL_; ?>device_action/add' class="btn btn-primary">
-                                <?php echo __('TABLE_HEAD_NEW_DEVICE', 'DEVICES'); ?>
-                            </a>
-                        </div>
-                        <div class="col col-12">
-                            <small class="form-text batchActionFeedback d-none"></small>
-                        </div>
-                    </div>
                 </div>
             </form>
 		<?php } else { ?>
