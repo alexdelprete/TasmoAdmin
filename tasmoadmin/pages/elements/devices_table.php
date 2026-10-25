@@ -57,6 +57,7 @@ $loadingIndicator = "<span class='loader' role='status' aria-label='{$loadingTex
         ); ?></th>
         <th data-column-id='hostname' data-column-label='<?php echo __('HOSTNAME', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col class='more'><?php echo __('HOSTNAME', 'DEVICES'); ?></th>
         <th data-column-id='mac' data-column-label='<?php echo __('MAC', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col class='more'><?php echo __('MAC', 'DEVICES'); ?></th>
+        <th data-column-id='bssid' data-column-label='<?php echo __('TABLE_HEAD_BSSID', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col class='more'><?php echo __('TABLE_HEAD_BSSID', 'DEVICES'); ?></th>
         <th data-column-id='mqtt' data-column-label='<?php echo __('MQTT', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col class='more'><?php echo __('MQTT', 'DEVICES'); ?></th>
         <th data-column-id='idx' data-column-label='<?php echo __('TABLE_HEAD_IDX', 'DEVICES'); ?>' data-column-toggle='true' data-tablesaw-sortable-col class='more idx hidden'><?php echo __(
             'TABLE_HEAD_IDX',
@@ -185,6 +186,11 @@ if (isset($devices) && !empty($devices)) {
 														</span>
                     </td>
                     <td class='more mac' data-column-id='mac'>
+														<span>
+															<?php echo $loadingIndicator; ?>
+														</span>
+                    </td>
+                    <td class='more bssid' data-column-id='bssid'>
 														<span>
 															<?php echo $loadingIndicator; ?>
 														</span>

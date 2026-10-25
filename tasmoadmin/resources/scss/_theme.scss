@@ -1705,3 +1705,30 @@ body.nightmode {
   align-items: center;
   gap: 4px;
 }
+
+// Access point names (Settings) and the BSSID column
+
+#{$ta} .bssid-names-table td,
+#{$ta} .bssid-names-table th {
+  vertical-align: middle;
+}
+
+#{$ta} .bssid-names-table .bssid-value {
+  font-family: var(--ta-mono);
+  color: var(--ta-text-strong);
+  white-space: nowrap;
+}
+
+#{$ta} .bssid-names-table .bssid-devices {
+  width: 1%;
+  white-space: nowrap;
+  color: var(--ta-muted);
+  cursor: default;
+}
+
+#{$ta} .devices-page #device-list td.bssid .bssid-named {
+  color: var(--ta-text-strong);
+  text-decoration: underline dotted var(--ta-border-strong);
+  text-underline-offset: 3px;
+  cursor: help;
+}

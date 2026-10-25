@@ -24,6 +24,7 @@ function normalizeStatusData(data = {}) {
       channel: wifiStatus.Channel,
       rssi: wifiStatus.RSSI,
       ssid: wifiStatus.SSID ?? wifiStatus.SSId,
+      bssid: wifiStatus.BSSId ?? wifiStatus.BSSID,
       uptime:
         normalized.StatusSTS.Laufzeit ??
         normalized.StatusSTS.Uptime ??

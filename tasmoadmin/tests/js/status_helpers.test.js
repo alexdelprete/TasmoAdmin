@@ -65,6 +65,7 @@ test("normalizeStatusData keeps wifi details when wifi status is present", () =>
         Channel: 11,
         RSSI: 64,
         SSId: "home-net",
+        BSSId: "AA:BB:CC:00:11:22",
       },
     },
   });
@@ -74,6 +75,7 @@ test("normalizeStatusData keeps wifi details when wifi status is present", () =>
     channel: 11,
     rssi: 64,
     ssid: "home-net",
+    bssid: "AA:BB:CC:00:11:22",
     uptime: "2T00:00:00",
   });
 });
