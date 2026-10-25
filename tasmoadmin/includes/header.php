@@ -84,6 +84,16 @@ $themeToggleMarkup = ob_get_clean();
 
 	</head>
 	<body class='<?php echo $container->get(ViewHelper::class)->getNightMode(date('H')); ?>'>
+		<script>
+			(function () {
+				try {
+					var mode = window.localStorage.getItem('nightmode_override');
+					if (mode === 'night' || mode === 'day') {
+						document.body.classList.toggle('nightmode', mode === 'night');
+					}
+				} catch (e) {}
+			})();
+		</script>
 		<header>
 			<nav class="navbar navbar-expand-sm navbar-dark bg-dark fixed-top py-1">
 				<div class="container-fluid">
