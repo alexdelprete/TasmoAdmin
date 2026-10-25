@@ -429,14 +429,16 @@ body:not(.nightmode) .navbar-dark .navbar-toggler-icon {
   border-color: var(--ta-border);
 }
 
-#{$ta} .form-check-input {
-  background-color: var(--ta-input);
-  border: 1px solid var(--ta-border-strong);
+#{$ta} .form-check-input,
+#{$ta} input.form-check-input {
+  background-color: var(--ta-input) !important;
+  border: 1px solid var(--ta-border-strong) !important;
 }
 
-#{$ta} .form-check-input:checked {
-  background-color: var(--ta-blue);
-  border-color: var(--ta-blue);
+#{$ta} .form-check-input:checked,
+#{$ta} input.form-check-input:checked {
+  background-color: var(--ta-blue) !important;
+  border-color: var(--ta-blue) !important;
 }
 
 #{$ta} .form-switch .form-check-input {
@@ -446,6 +448,43 @@ body:not(.nightmode) .navbar-dark .navbar-toggler-icon {
 
 #{$ta} .form-switch .form-check-input:checked {
   background-color: var(--ta-blue);
+}
+
+// TasmoAdmin's own switch: <label class="form-switch"><input><i></i></label>
+
+#{$ta} label.form-switch i,
+#{$ta} label.form-switch i::before {
+  background-color: var(--ta-toggle-off) !important;
+  box-shadow: none !important;
+}
+
+#{$ta} label.form-switch i::after {
+  background-color: var(--ta-knob-off) !important;
+  box-shadow: var(--ta-knob-shadow) !important;
+}
+
+#{$ta} label.form-switch input:checked + i {
+  background-color: var(--ta-blue) !important;
+}
+
+#{$ta} label.form-switch input:checked + i::after {
+  background-color: var(--ta-knob-on) !important;
+}
+
+#{$ta} label.form-switch.error i,
+#{$ta} label.form-switch.error i::before,
+#{$ta} label.form-switch.error input:checked + i {
+  background-color: var(--ta-red) !important;
+}
+
+#{$ta} label.form-switch.disabled i,
+#{$ta} label.form-switch.disabled i::before,
+#{$ta} label.form-switch.disabled input:checked + i {
+  background-color: var(--ta-raised) !important;
+}
+
+#{$ta} label.form-switch.disabled i::after {
+  background-color: var(--ta-border-strong) !important;
 }
 
 #{$ta} .form-check-label,
@@ -640,6 +679,23 @@ body:not(.nightmode) .navbar-dark .navbar-toggler-icon {
   color: var(--ta-blue);
 }
 
+#{$ta} #device-list a i,
+#{$ta} #device-list a .fas,
+#{$ta} #device-list a .fa {
+  color: var(--ta-muted) !important;
+}
+
+#{$ta} #device-list a:hover i,
+#{$ta} #device-list a:hover .fas {
+  color: var(--ta-blue) !important;
+}
+
+#{$ta} #device-list a.delete i,
+#{$ta} #device-list a.delete .fas,
+#{$ta} #device-list a.error i {
+  color: var(--ta-red) !important;
+}
+
 #{$ta} #device-list td .text-danger,
 #{$ta} #device-list a.text-danger,
 #{$ta} .text-danger {
@@ -793,13 +849,13 @@ body.nightmode .modal .btn-close {
   background-color: var(--ta-hover) !important;
 }
 
-#{$ta} .startpage .card-holder .box_device:has(img[src$="_on.png"]) {
+#{$ta} .startpage .card-holder .box_device:has(img[src*="_on.png"]) {
   background-color: var(--ta-amber-soft) !important;
   border-color: var(--ta-amber) !important;
 }
 
 #{$ta} .startpage .card-holder .box_device.error,
-#{$ta} .startpage .card-holder .box_device:has(img[src$="_error.png"]) {
+#{$ta} .startpage .card-holder .box_device:has(img[src*="_error.png"]) {
   border-color: color-mix(in srgb, var(--ta-red) 45%, transparent) !important;
 }
 
@@ -822,15 +878,15 @@ body.nightmode .modal .btn-close {
   mask: url("#{$power-icon}") center / contain no-repeat;
 }
 
-#{$ta} .startpage .card-holder .box_device img.box_device_image[src$="_on.png"] {
+#{$ta} .startpage .card-holder .box_device img.box_device_image[src*="_on.png"] {
   background-color: var(--ta-amber);
 }
 
-#{$ta} .startpage .card-holder .box_device img.box_device_image[src$="_error.png"] {
+#{$ta} .startpage .card-holder .box_device img.box_device_image[src*="_error.png"] {
   background-color: var(--ta-red);
 }
 
-#{$ta} .startpage .card-holder .box_device img.box_device_image[src$="_none.png"] {
+#{$ta} .startpage .card-holder .box_device img.box_device_image[src*="_none.png"] {
   background-color: var(--ta-cyan);
   -webkit-mask-image: url("#{$sensor-icon}");
   mask-image: url("#{$sensor-icon}");
