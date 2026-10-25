@@ -1319,3 +1319,20 @@ $icon-x: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='
   text-align: left;
   white-space: normal;
 }
+
+// Devices toolbar: batch actions and "Add device" sit in the same bar as the
+// column selector and the search field.
+
+#{$ta} .devices-page .devices-toolbar-row {
+  align-items: center !important;
+}
+
+#{$ta} .devices-page .devices-batch-feedback-col:has(.batchActionFeedback.d-none) {
+  display: none;
+}
+
+#{$ta} .devices-page .devices-batch-file-col .form-text,
+#{$ta} .devices-page .batchActionFileWrapper .form-text {
+  display: block;
+  margin-top: 4px;
+}

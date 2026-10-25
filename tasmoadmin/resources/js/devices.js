@@ -374,7 +374,7 @@ function initCommandHelper() {
 
     if (shouldSubmitBatchForm(action)) {
       $(".batchActionField").val(action);
-      const form = $(this).closest("form").get(0);
+      const form = this.form || $(this).closest("form").get(0);
 
       if (form) {
         if (typeof form.requestSubmit === "function") {
