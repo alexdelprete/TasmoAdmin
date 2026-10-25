@@ -1,0 +1,866 @@
+// TasmoAdmin themes: a modern light day theme and a OneDark night theme.
+//
+// Every colour comes from the --ta-* tokens below: :root holds the day
+// values, body.nightmode the night values. Bootstrap's own variables are
+// pointed at the tokens, and the rules further down restyle TasmoAdmin's
+// components with them.
+//
+// $ta raises the specificity of each rule by one class and one element,
+// so these rules win over the older per-page rules in _style.scss and
+// _start.scss (both `.card` and `.nightmode .card`) without reordering them.
+
+$ta: "body:is(.nightmode, :not(.nightmode))";
+
+$power-icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M12 3v8'/%3E%3Cpath d='M6.3 7.2a8 8 0 1 0 11.4 0'/%3E%3C/svg%3E";
+$sensor-icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='5'/%3E%3Ccircle cx='12' cy='12' r='1.5' fill='black'/%3E%3C/svg%3E";
+
+:root {
+  --ta-font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ta-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --ta-radius: 10px;
+  --ta-radius-lg: 14px;
+
+  --ta-page: #f5f6f8;
+  --ta-bar: #ffffff;
+  --ta-bar-border: #e3e6eb;
+  --ta-card: #ffffff;
+  --ta-raised: #f1f3f6;
+  --ta-stripe: #f7f8fa;
+  --ta-hover: #eef1f5;
+  --ta-border: #e3e6eb;
+  --ta-border-strong: #cfd4dc;
+  --ta-input: #ffffff;
+  --ta-input-disabled: #f1f3f6;
+
+  --ta-text-strong: #1f2329;
+  --ta-text: #3a3f47;
+  --ta-muted: #5f6672;
+  --ta-placeholder: #7a818c;
+
+  --ta-blue: #2f62d6;
+  --ta-blue-hover: #2753b8;
+  --ta-on-blue: #ffffff;
+  --ta-blue-soft: rgba(47, 98, 214, 0.1);
+  --ta-green: #2f7d32;
+  --ta-green-hover: #276b2a;
+  --ta-on-green: #ffffff;
+  --ta-green-soft: rgba(47, 125, 50, 0.1);
+  --ta-green-text: #2f7d32;
+  --ta-red: #c4383f;
+  --ta-red-hover: #a92f35;
+  --ta-on-red: #ffffff;
+  --ta-red-soft: rgba(196, 56, 63, 0.09);
+  --ta-red-text: #b42f36;
+  --ta-amber: #d4920a;
+  --ta-amber-soft: rgba(212, 146, 10, 0.12);
+  --ta-amber-text: #8a5a12;
+  --ta-cyan: #0e7490;
+  --ta-purple: #7c3aed;
+
+  --ta-nav-active: #eaf0fc;
+  --ta-nav-active-text: #2f62d6;
+  --ta-toggle-off: #cfd4dc;
+  --ta-knob-on: #ffffff;
+  --ta-knob-off: #ffffff;
+  --ta-knob-shadow: 0 1px 2px rgba(16, 24, 40, 0.25);
+  --ta-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --ta-shadow-pop: 0 12px 32px rgba(16, 24, 40, 0.14);
+  --ta-focus: rgba(47, 98, 214, 0.22);
+  --ta-icon-off: #8a919c;
+
+  --ta-blue-rgb: 47, 98, 214;
+  --ta-text-rgb: 58, 63, 71;
+  --ta-page-rgb: 245, 246, 248;
+}
+
+body.nightmode {
+  --ta-page: #1e2227;
+  --ta-bar: #21252b;
+  --ta-bar-border: #181a1f;
+  --ta-card: #282c34;
+  --ta-raised: #2c313a;
+  --ta-stripe: #2c313a;
+  --ta-hover: #323842;
+  --ta-border: #3a3f4b;
+  --ta-border-strong: #4b5263;
+  --ta-input: #21252b;
+  --ta-input-disabled: #2c313a;
+
+  --ta-text-strong: #d7dae0;
+  --ta-text: #abb2bf;
+  --ta-muted: #9da5b4;
+  --ta-placeholder: #8b929e;
+
+  --ta-blue: #61afef;
+  --ta-blue-hover: #7dbdf2;
+  --ta-on-blue: #1e2227;
+  --ta-blue-soft: rgba(97, 175, 239, 0.12);
+  --ta-green: #98c379;
+  --ta-green-hover: #a9cd8f;
+  --ta-on-green: #1e2227;
+  --ta-green-soft: rgba(152, 195, 121, 0.12);
+  --ta-green-text: #98c379;
+  --ta-red: #e06c75;
+  --ta-red-hover: #e6858d;
+  --ta-on-red: #1e2227;
+  --ta-red-soft: rgba(224, 108, 117, 0.14);
+  --ta-red-text: #f0a0a6;
+  --ta-amber: #e5c07b;
+  --ta-amber-soft: rgba(229, 192, 123, 0.16);
+  --ta-amber-text: #e5c07b;
+  --ta-cyan: #56b6c2;
+  --ta-purple: #c678dd;
+
+  --ta-nav-active: #2c313a;
+  --ta-nav-active-text: #d7dae0;
+  --ta-toggle-off: #3e4451;
+  --ta-knob-on: #1e2227;
+  --ta-knob-off: #9da5b4;
+  --ta-knob-shadow: none;
+  --ta-shadow: none;
+  --ta-shadow-pop: 0 16px 36px rgba(0, 0, 0, 0.35);
+  --ta-focus: rgba(97, 175, 239, 0.25);
+  --ta-icon-off: #7f8692;
+
+  --ta-blue-rgb: 97, 175, 239;
+  --ta-text-rgb: 171, 178, 191;
+  --ta-page-rgb: 30, 34, 39;
+}
+
+// Bootstrap reads these; they are set on both scopes so each resolves
+// against its own tokens.
+:root,
+body.nightmode {
+  --bs-body-bg: var(--ta-page);
+  --bs-body-bg-rgb: var(--ta-page-rgb);
+  --bs-body-color: var(--ta-text);
+  --bs-body-color-rgb: var(--ta-text-rgb);
+  --bs-emphasis-color: var(--ta-text-strong);
+  --bs-secondary-color: var(--ta-muted);
+  --bs-tertiary-color: var(--ta-muted);
+  --bs-secondary-bg: var(--ta-raised);
+  --bs-tertiary-bg: var(--ta-raised);
+  --bs-border-color: var(--ta-border);
+  --bs-border-color-translucent: var(--ta-border);
+  --bs-heading-color: var(--ta-text-strong);
+  --bs-link-color: var(--ta-blue);
+  --bs-link-color-rgb: var(--ta-blue-rgb);
+  --bs-link-hover-color: var(--ta-blue-hover);
+  --bs-primary: var(--ta-blue);
+  --bs-primary-rgb: var(--ta-blue-rgb);
+  --bs-focus-ring-color: var(--ta-focus);
+  --bs-border-radius: var(--ta-radius);
+}
+
+// Page
+
+#{$ta} {
+  background-color: var(--ta-page) !important;
+  color: var(--ta-text) !important;
+  font-family: var(--ta-font);
+}
+
+#{$ta} h1,
+#{$ta} h2,
+#{$ta} h3,
+#{$ta} h4,
+#{$ta} h5,
+#{$ta} h6,
+#{$ta} .h1,
+#{$ta} .h2,
+#{$ta} .h3,
+#{$ta} .h4,
+#{$ta} .h5,
+#{$ta} .h6 {
+  color: var(--ta-text-strong);
+}
+
+#{$ta} a:not(.btn):not(.nav-link):not(.dropdown-item) {
+  color: var(--ta-blue);
+}
+
+#{$ta} a:not(.btn):not(.nav-link):not(.dropdown-item):hover {
+  color: var(--ta-blue-hover);
+}
+
+#{$ta} .text-muted,
+#{$ta} .text-body-secondary,
+#{$ta} small.text-muted,
+#{$ta} small.text-body-secondary,
+#{$ta} .form-text,
+#{$ta} .form-text.text-muted {
+  color: var(--ta-muted) !important;
+}
+
+#{$ta} code,
+#{$ta} pre,
+#{$ta} kbd {
+  font-family: var(--ta-mono);
+}
+
+#{$ta} code {
+  color: var(--ta-purple);
+}
+
+#{$ta} hr {
+  border-color: var(--ta-border);
+  opacity: 1;
+}
+
+// Top bar and footer
+
+#{$ta} .navbar.bg-dark,
+#{$ta} .navbar.navbar-dark,
+#{$ta} .footer .navbar,
+#{$ta} .footer .bg-dark {
+  background-color: var(--ta-bar) !important;
+  border-bottom: 1px solid var(--ta-bar-border);
+  box-shadow: var(--ta-shadow);
+}
+
+#{$ta} .footer .navbar {
+  border-top: 1px solid var(--ta-bar-border);
+  border-bottom: 0;
+}
+
+#{$ta} .navbar .navbar-brand.logo img {
+  border-radius: 8px;
+}
+
+#{$ta} .navbar-dark .navbar-nav .nav-link,
+#{$ta} .navbar-dark .navbar-nav .nav-link i,
+#{$ta} .bg-dark a:not(.btn),
+#{$ta} .bg-dark a:not(.btn) i,
+#{$ta} .navbar-dark .navbar-text,
+#{$ta} .navbar-dark .navbar-text a,
+#{$ta} .navbar-dark .navbar-text a i,
+#{$ta} .footer .navbar-dark a,
+#{$ta} .footer .navbar-dark a i {
+  color: var(--ta-muted) !important;
+}
+
+#{$ta} .navbar-dark .navbar-nav .nav-link {
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-weight: 500;
+}
+
+#{$ta} .navbar-dark .navbar-nav .nav-link:hover,
+#{$ta} .navbar-dark .navbar-nav .nav-link:focus,
+#{$ta} .navbar-dark .navbar-nav .nav-link:hover i,
+#{$ta} .navbar-dark .navbar-nav .nav-link:focus i,
+#{$ta} .bg-dark a:not(.btn):hover,
+#{$ta} .bg-dark a:not(.btn):focus,
+#{$ta} .footer .navbar-dark a:hover,
+#{$ta} .footer .navbar-dark a:focus {
+  color: var(--ta-text-strong) !important;
+}
+
+#{$ta} .navbar-dark .navbar-nav .nav-item.active > .nav-link,
+#{$ta} .navbar-dark .navbar-nav .nav-link.active,
+#{$ta} .navbar-dark .navbar-nav .nav-item.active > .nav-link i,
+#{$ta} .navbar-dark .navbar-nav .nav-link.active i {
+  background-color: var(--ta-nav-active);
+  color: var(--ta-nav-active-text) !important;
+}
+
+#{$ta} .navbar .dropdown-menu,
+#{$ta} .navbar .dropdown-menu.bg-dark,
+#{$ta} .dropdown-menu {
+  background-color: var(--ta-card) !important;
+  border: 1px solid var(--ta-border);
+  border-radius: var(--ta-radius);
+  box-shadow: var(--ta-shadow-pop);
+  padding: 0.35rem;
+}
+
+#{$ta} .navbar-dark .dropdown-item,
+#{$ta} .navbar-dark .dropdown-item i,
+#{$ta} .dropdown-menu .dropdown-item,
+#{$ta} .dropdown-menu .dropdown-item i,
+#{$ta} .dropdown-menu label {
+  color: var(--ta-text) !important;
+  border-radius: 7px;
+}
+
+#{$ta} .navbar-dark .dropdown-item:hover,
+#{$ta} .navbar-dark .dropdown-item:focus,
+#{$ta} .dropdown-menu .dropdown-item:hover,
+#{$ta} .dropdown-menu .dropdown-item:focus,
+#{$ta} .navbar-dark .dropdown-item.active,
+#{$ta} .dropdown-menu .dropdown-item.active {
+  background-color: var(--ta-hover) !important;
+  color: var(--ta-text-strong) !important;
+}
+
+#{$ta} .navbar-toggler {
+  border-color: var(--ta-border);
+}
+
+#{$ta} .navbar-dark .navbar-toggler-icon {
+  filter: var(--ta-toggler-filter, none);
+}
+
+body:not(.nightmode) .navbar-dark .navbar-toggler-icon {
+  filter: invert(1) brightness(0.4);
+}
+
+// Day/night switch in the top bar
+
+#{$ta} .theme-toggle-side,
+#{$ta} .theme-toggle-side i {
+  color: var(--ta-muted) !important;
+}
+
+#{$ta} .theme-toggle .theme-toggle-track {
+  background-color: var(--ta-toggle-off);
+  border-color: transparent;
+}
+
+#{$ta} .theme-toggle .theme-toggle-thumb {
+  background-color: var(--ta-knob-off);
+  box-shadow: var(--ta-knob-shadow);
+}
+
+#{$ta} .theme-toggle.is-nightmode .theme-toggle-track {
+  background-color: var(--ta-blue);
+}
+
+#{$ta} .theme-toggle.is-nightmode .theme-toggle-thumb {
+  background-color: var(--ta-knob-on);
+}
+
+// Cards and panels
+
+#{$ta} .card,
+#{$ta} .devices-page .devices-panel,
+#{$ta} .site-config-page .settings-section,
+#{$ta} .upload-form-page .upload-intro-card,
+#{$ta} .modal-content {
+  background-color: var(--ta-card) !important;
+  border: 1px solid var(--ta-border) !important;
+  border-radius: var(--ta-radius-lg);
+  box-shadow: var(--ta-shadow) !important;
+  color: var(--ta-text);
+}
+
+#{$ta} .card-header,
+#{$ta} .card-footer,
+#{$ta} .modal-header,
+#{$ta} .modal-footer {
+  background-color: transparent;
+  border-color: var(--ta-border);
+}
+
+#{$ta} .card-title,
+#{$ta} .modal-title,
+#{$ta} .card .form-label,
+#{$ta} .form-label,
+#{$ta} label.form-label {
+  color: var(--ta-text-strong);
+}
+
+#{$ta} .form-label {
+  font-weight: 500;
+}
+
+#{$ta} .site-config-page .settings-option,
+#{$ta} .settings-option {
+  background-color: var(--ta-raised) !important;
+  border: 1px solid var(--ta-border) !important;
+  border-radius: var(--ta-radius);
+}
+
+#{$ta} .site-config-page .settings-section > h5,
+#{$ta} .site-config-page .settings-section .settings-section-title {
+  color: var(--ta-text-strong);
+}
+
+// Forms
+
+#{$ta} .form-control,
+#{$ta} .form-select,
+#{$ta} .card .form-control,
+#{$ta} .card .form-select,
+#{$ta} .card textarea,
+#{$ta} .site-config-page .mqtt-discovery-settings-section .mqtt-discovery-field .form-control,
+#{$ta} .devices-page .device-search {
+  background-color: var(--ta-input) !important;
+  border: 1px solid var(--ta-border) !important;
+  border-radius: 9px;
+  color: var(--ta-text-strong) !important;
+}
+
+#{$ta} .form-control::placeholder,
+#{$ta} .card textarea::placeholder,
+#{$ta} .devices-page .device-search::placeholder,
+#{$ta} .site-config-page .mqtt-discovery-settings-section .mqtt-discovery-field .form-control::placeholder {
+  color: var(--ta-placeholder) !important;
+  opacity: 1;
+}
+
+#{$ta} .form-control:focus,
+#{$ta} .form-select:focus,
+#{$ta} .form-check-input:focus,
+#{$ta} .btn:focus-visible {
+  border-color: var(--ta-blue) !important;
+  box-shadow: 0 0 0 3px var(--ta-focus) !important;
+}
+
+#{$ta} .form-control:disabled,
+#{$ta} .form-control[readonly],
+#{$ta} .form-select:disabled,
+#{$ta} .card textarea:disabled {
+  background-color: var(--ta-input-disabled) !important;
+  color: var(--ta-muted) !important;
+}
+
+#{$ta} .input-group-text,
+#{$ta} .card .input-group-text,
+#{$ta} .devices-page .device-search-group .input-group-text {
+  background-color: var(--ta-raised) !important;
+  border-color: var(--ta-border) !important;
+  color: var(--ta-muted) !important;
+}
+
+#{$ta} .form-control[type="file"]::file-selector-button {
+  background-color: var(--ta-raised);
+  color: var(--ta-text-strong);
+  border-color: var(--ta-border);
+}
+
+#{$ta} .form-check-input {
+  background-color: var(--ta-input);
+  border: 1px solid var(--ta-border-strong);
+}
+
+#{$ta} .form-check-input:checked {
+  background-color: var(--ta-blue);
+  border-color: var(--ta-blue);
+}
+
+#{$ta} .form-switch .form-check-input {
+  background-color: var(--ta-toggle-off);
+  border-color: transparent;
+}
+
+#{$ta} .form-switch .form-check-input:checked {
+  background-color: var(--ta-blue);
+}
+
+#{$ta} .form-check-label,
+#{$ta} .card .form-check-label {
+  color: var(--ta-text-strong);
+}
+
+// Buttons
+
+#{$ta} .btn {
+  border-radius: 9px;
+  font-weight: 500;
+}
+
+#{$ta} .btn-primary,
+#{$ta} a.btn.btn-primary {
+  background-color: var(--ta-blue) !important;
+  border-color: var(--ta-blue) !important;
+  color: var(--ta-on-blue) !important;
+}
+
+#{$ta} .btn-primary:hover,
+#{$ta} .btn-primary:focus,
+#{$ta} a.btn.btn-primary:hover {
+  background-color: var(--ta-blue-hover) !important;
+  border-color: var(--ta-blue-hover) !important;
+}
+
+#{$ta} .btn-success,
+#{$ta} a.btn.btn-success,
+#{$ta} .btn.btn-success {
+  background-color: var(--ta-green) !important;
+  border-color: var(--ta-green) !important;
+  color: var(--ta-on-green) !important;
+}
+
+#{$ta} .btn-success:hover,
+#{$ta} .btn.btn-success:hover,
+#{$ta} a.btn.btn-success:hover {
+  background-color: var(--ta-green-hover) !important;
+  border-color: var(--ta-green-hover) !important;
+}
+
+#{$ta} .btn-danger,
+#{$ta} a.btn.btn-danger {
+  background-color: var(--ta-red) !important;
+  border-color: var(--ta-red) !important;
+  color: var(--ta-on-red) !important;
+}
+
+#{$ta} .btn-danger:hover,
+#{$ta} a.btn.btn-danger:hover {
+  background-color: var(--ta-red-hover) !important;
+  border-color: var(--ta-red-hover) !important;
+}
+
+#{$ta} .btn-secondary,
+#{$ta} a.btn.btn-secondary,
+#{$ta} .btn-outline-secondary,
+#{$ta} a.btn.btn-outline-secondary,
+#{$ta} .btn-outline-primary,
+#{$ta} .btn-light,
+#{$ta} .cache-cleanup-panel .btn-outline-secondary,
+#{$ta} .cache-cleanup-panel .btn-outline-primary {
+  background-color: var(--ta-card) !important;
+  border: 1px solid var(--ta-border-strong) !important;
+  color: var(--ta-text-strong) !important;
+}
+
+#{$ta} .btn-secondary:hover,
+#{$ta} a.btn.btn-secondary:hover,
+#{$ta} .btn-outline-secondary:hover,
+#{$ta} a.btn.btn-outline-secondary:hover,
+#{$ta} .btn-outline-primary:hover,
+#{$ta} .btn-light:hover,
+#{$ta} .cache-cleanup-panel .btn-outline-secondary:hover,
+#{$ta} .cache-cleanup-panel .btn-outline-primary:hover {
+  background-color: var(--ta-hover) !important;
+  color: var(--ta-text-strong) !important;
+}
+
+#{$ta} .btn-secondary i,
+#{$ta} .btn-outline-secondary i,
+#{$ta} .btn-outline-primary i {
+  color: inherit !important;
+}
+
+// Tabs
+
+#{$ta} .nav-tabs,
+#{$ta} .devices-autoscan-page .nav-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--ta-border) !important;
+  border-radius: var(--ta-radius);
+  background-color: var(--ta-raised);
+}
+
+#{$ta} .nav-tabs .nav-link,
+#{$ta} .devices-autoscan-page .nav-tabs .nav-link {
+  border: 0 !important;
+  border-radius: 7px;
+  margin: 0;
+  padding: 0.45rem 1rem;
+  background-color: transparent !important;
+  color: var(--ta-muted) !important;
+  font-weight: 500;
+}
+
+#{$ta} .nav-tabs .nav-link:hover,
+#{$ta} .nav-tabs .nav-link:focus,
+#{$ta} .devices-autoscan-page .nav-tabs .nav-link:focus {
+  color: var(--ta-text-strong) !important;
+}
+
+#{$ta} .nav-tabs .nav-link.active,
+#{$ta} .nav-tabs .nav-item.show .nav-link,
+#{$ta} .devices-autoscan-page .nav-tabs .nav-link.active {
+  background-color: var(--ta-card) !important;
+  color: var(--ta-text-strong) !important;
+  box-shadow: inset 0 -2px 0 var(--ta-blue), var(--ta-shadow);
+}
+
+#{$ta} .tab-content {
+  margin-top: 1rem;
+}
+
+// Tables
+
+#{$ta} .table {
+  --bs-table-bg: var(--ta-card);
+  --bs-table-color: var(--ta-text);
+  --bs-table-border-color: var(--ta-border);
+  --bs-table-striped-bg: var(--ta-stripe);
+  --bs-table-striped-color: var(--ta-text);
+  --bs-table-hover-bg: var(--ta-hover);
+  --bs-table-hover-color: var(--ta-text-strong);
+  --bs-table-active-bg: var(--ta-hover);
+  color: var(--ta-text);
+  border-color: var(--ta-border);
+}
+
+#{$ta} .table > :not(caption) > * > * {
+  border-bottom-color: var(--ta-border);
+}
+
+#{$ta} .table thead th,
+#{$ta} .table-light,
+#{$ta} .table thead.table-light th {
+  --bs-table-bg: var(--ta-raised);
+  background-color: var(--ta-raised) !important;
+  color: var(--ta-muted) !important;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--ta-border) !important;
+}
+
+#{$ta} .table-striped > tbody > tr:nth-of-type(odd) > *,
+#{$ta} .devices-page #device-list.tablesaw-stack tbody tr.odd,
+#{$ta} .devices-page #device-list.tablesaw-stack tbody tr.odd > * {
+  background-color: var(--ta-stripe) !important;
+  --bs-table-accent-bg: transparent;
+}
+
+#{$ta} .table-striped > tbody > tr:nth-of-type(even) > *,
+#{$ta} .devices-page #device-list.tablesaw-stack tbody tr.even,
+#{$ta} .devices-page #device-list.tablesaw-stack tbody tr.even > * {
+  background-color: var(--ta-card) !important;
+  --bs-table-accent-bg: transparent;
+}
+
+#{$ta} .table-hover > tbody > tr:hover > * {
+  background-color: var(--ta-hover) !important;
+}
+
+#{$ta} .table td,
+#{$ta} .table th {
+  border-color: var(--ta-border);
+  vertical-align: middle;
+}
+
+#{$ta} #device-list td,
+#{$ta} #device-list td span {
+  color: var(--ta-text);
+}
+
+#{$ta} #device-list td a {
+  color: var(--ta-blue);
+}
+
+#{$ta} #device-list td .text-danger,
+#{$ta} #device-list a.text-danger,
+#{$ta} .text-danger {
+  color: var(--ta-red) !important;
+}
+
+#{$ta} .text-success {
+  color: var(--ta-green-text) !important;
+}
+
+#{$ta} .text-warning {
+  color: var(--ta-amber-text) !important;
+}
+
+#{$ta} .text-primary,
+#{$ta} .text-info {
+  color: var(--ta-blue) !important;
+}
+
+// Alerts, badges, progress log
+
+#{$ta} .alert {
+  border-radius: var(--ta-radius);
+  border: 1px solid var(--ta-border);
+  background-color: var(--ta-raised);
+  color: var(--ta-text-strong);
+}
+
+#{$ta} .alert-success {
+  background-color: var(--ta-green-soft) !important;
+  border-color: color-mix(in srgb, var(--ta-green) 40%, transparent) !important;
+  color: var(--ta-text-strong) !important;
+}
+
+#{$ta} .alert-info,
+#{$ta} .alert-primary {
+  background-color: var(--ta-blue-soft) !important;
+  border-color: color-mix(in srgb, var(--ta-blue) 40%, transparent) !important;
+  color: var(--ta-text-strong) !important;
+}
+
+#{$ta} .alert-danger {
+  background-color: var(--ta-red-soft) !important;
+  border-color: color-mix(in srgb, var(--ta-red) 40%, transparent) !important;
+  color: var(--ta-text-strong) !important;
+}
+
+#{$ta} .alert-warning {
+  background-color: var(--ta-amber-soft) !important;
+  border-color: color-mix(in srgb, var(--ta-amber) 45%, transparent) !important;
+  color: var(--ta-text-strong) !important;
+}
+
+#{$ta} .alert .btn-close {
+  filter: var(--ta-close-filter, none);
+}
+
+body.nightmode .alert .btn-close,
+body.nightmode .modal .btn-close {
+  filter: invert(1) grayscale(1) brightness(1.6);
+}
+
+#{$ta} .badge.bg-secondary,
+#{$ta} .badge.text-bg-secondary {
+  background-color: var(--ta-raised) !important;
+  color: var(--ta-muted) !important;
+}
+
+#{$ta} .badge.bg-success,
+#{$ta} .badge.text-bg-success {
+  background-color: var(--ta-green-soft) !important;
+  color: var(--ta-green-text) !important;
+}
+
+#{$ta} .badge.bg-danger,
+#{$ta} .badge.text-bg-danger {
+  background-color: var(--ta-red-soft) !important;
+  color: var(--ta-red-text) !important;
+}
+
+#{$ta} .update-page #progressbox,
+#{$ta} #progressbox,
+#{$ta} #logGlobal {
+  font-family: var(--ta-mono);
+  font-size: 0.85rem;
+  color: var(--ta-text);
+}
+
+#{$ta} #progressbox .device,
+#{$ta} #logGlobal {
+  background-color: var(--ta-card);
+  border: 1px solid var(--ta-border);
+  border-radius: var(--ta-radius-lg);
+  box-shadow: var(--ta-shadow);
+}
+
+#{$ta} #progressbox .device h1 {
+  font-family: var(--ta-font);
+  color: var(--ta-text-strong);
+}
+
+#{$ta} #progressbox .success,
+#{$ta} #logGlobal .success {
+  color: var(--ta-green-text);
+}
+
+#{$ta} #progressbox .error,
+#{$ta} #logGlobal .error {
+  color: var(--ta-red-text);
+}
+
+// Release notes and changelog (rendered Markdown)
+
+#{$ta} .changelog,
+#{$ta} .card .card-body {
+  color: var(--ta-text);
+}
+
+#{$ta} .card .card-body h1,
+#{$ta} .card .card-body h2,
+#{$ta} .card .card-body h3 {
+  color: var(--ta-text-strong);
+}
+
+#{$ta} .card .card-body pre,
+#{$ta} .card .card-body code {
+  background-color: var(--ta-raised);
+  border-radius: 5px;
+  padding: 0.05rem 0.3rem;
+}
+
+// Modals
+
+#{$ta} .modal-backdrop.show {
+  opacity: 0.6;
+}
+
+// Start page tiles
+
+#{$ta} .startpage .card-holder .box_device {
+  border: 1px solid var(--ta-border) !important;
+  border-radius: var(--ta-radius-lg);
+  background-color: var(--ta-card) !important;
+  box-shadow: var(--ta-shadow);
+  padding: 12px 8px 10px;
+  height: 100%;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+#{$ta} .startpage .card-holder .box_device:hover {
+  background-color: var(--ta-hover) !important;
+}
+
+#{$ta} .startpage .card-holder .box_device:has(img[src$="_on.png"]) {
+  background-color: var(--ta-amber-soft) !important;
+  border-color: var(--ta-amber) !important;
+}
+
+#{$ta} .startpage .card-holder .box_device.error,
+#{$ta} .startpage .card-holder .box_device:has(img[src$="_error.png"]) {
+  border-color: color-mix(in srgb, var(--ta-red) 45%, transparent) !important;
+}
+
+#{$ta} .startpage .card-holder .box_device#all_off {
+  border-style: dashed !important;
+  background-color: var(--ta-raised) !important;
+}
+
+#{$ta} .startpage .card-holder .box_device img.box_device_image {
+  display: block;
+  width: 60%;
+  max-width: 64px;
+  aspect-ratio: 1;
+  height: auto;
+  margin: 0 auto;
+  padding: 0;
+  object-position: -9999px -9999px;
+  background-color: var(--ta-icon-off);
+  -webkit-mask: url("#{$power-icon}") center / contain no-repeat;
+  mask: url("#{$power-icon}") center / contain no-repeat;
+}
+
+#{$ta} .startpage .card-holder .box_device img.box_device_image[src$="_on.png"] {
+  background-color: var(--ta-amber);
+}
+
+#{$ta} .startpage .card-holder .box_device img.box_device_image[src$="_error.png"] {
+  background-color: var(--ta-red);
+}
+
+#{$ta} .startpage .card-holder .box_device img.box_device_image[src$="_none.png"] {
+  background-color: var(--ta-cyan);
+  -webkit-mask-image: url("#{$sensor-icon}");
+  mask-image: url("#{$sensor-icon}");
+}
+
+#{$ta} .startpage .card-holder .box_device#all_off img.box_device_image {
+  background-color: var(--ta-red);
+}
+
+#{$ta} .startpage .card-holder .box_device .box_device_name {
+  color: var(--ta-text-strong) !important;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-top: 10px;
+}
+
+#{$ta} .startpage .card-holder .box_device .info-holder,
+#{$ta} .startpage .card-holder .box_device .info-holder .info {
+  color: var(--ta-muted) !important;
+  font-family: var(--ta-mono);
+}
+
+#{$ta} .startpage .card-holder .box_device.disabled:not(.ignoreProtection) img {
+  filter: none;
+  opacity: 0.45;
+}
+
+// Loader
+
+#{$ta} .loader {
+  color: var(--ta-muted);
+}
