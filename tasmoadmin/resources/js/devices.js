@@ -1024,6 +1024,35 @@ function initDeviceListViewport() {
   }
 }
 
+function getBssidName(bssid) {
+  const names = config.bssid_names || {};
+  return bssid ? names[String(bssid).toUpperCase()] || "" : "";
+}
+
+function updateBssidCell(row, data) {
+  const cell = $(row).find(".bssid span");
+  if (cell.length === 0) {
+    return;
+  }
+
+  const bssid = data.hasWifi && data.wifi ? data.wifi.bssid : undefined;
+  if (!bssid) {
+    cell.text("-").removeAttr("title").removeClass("bssid-named");
+    return;
+  }
+
+  const name = getBssidName(bssid);
+  cell
+    .text(name || bssid)
+    .attr("title", name ? bssid : "")
+    .toggleClass("bssid-named", name !== "");
+
+  const keywords = String($(row).data("keywords") || "");
+  if (keywords.indexOf(bssid) === -1) {
+    $(row).data("keywords", `${keywords} ${bssid} ${name}`.trim());
+  }
+}
+
 function getWifiLevel(rssi) {
   if (rssi === undefined || rssi === null) {
     return 0;
@@ -1320,6 +1349,8 @@ function updateRow(row, data, device_status) {
       .find(".mac span")
       .text(data.StatusNET.Mac !== undefined ? data.StatusNET.Mac : "?");
   }
+
+  updateBssidCell(row, data);
 
   if (!$(row).find(".mqtt span").hasClass("dont-update")) {
     $(row)

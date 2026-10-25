@@ -1,6 +1,7 @@
 <!doctype html>
 <?php
 
+use TasmoAdmin\Helper\BssidNameHelper;
 use TasmoAdmin\Helper\RequestHelper;
 use TasmoAdmin\Helper\UrlHelper;
 use TasmoAdmin\Helper\ViewHelper;
@@ -45,6 +46,7 @@ $viewHelper = $container->get(ViewHelper::class);
                 force_upgrade: <?php echo $viewHelper->getValue(1 == $Config->read('force_upgrade')); ?>,
                 update_newer_only: <?php echo $viewHelper->getValue(1 == $Config->read('update_newer_only')); ?>,
                 request_concurrency: <?php echo $Config->getRequestConcurrency(); ?>,
+                bssid_names: <?php echo BssidNameHelper::toScriptJson(BssidNameHelper::decode((string) $Config->read(BssidNameHelper::CONFIG_KEY))); ?>,
             };
 		</script>
 		<script src="<?php echo $urlHelper->js('compiled/vendor'); ?>"></script>

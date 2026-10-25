@@ -3,6 +3,7 @@
 use League\CommonMark\GithubFlavoredMarkdownConverter;
 use Symfony\Component\BrowserKit\HttpBrowser;
 use TasmoAdmin\DeviceRepository;
+use TasmoAdmin\Helper\BssidNameHelper;
 use TasmoAdmin\Helper\CacheCleanupHelper;
 use TasmoAdmin\Helper\GuzzleFactory;
 use TasmoAdmin\Helper\HtmlAttributeHelper;
@@ -23,7 +24,12 @@ if (isset($_POST['clean_temp_cache'])) {
     unset($settings['save']);
     $clearMqttDiscoveryPassword = isset($settings['clear_mqtt_discovery_password'])
         && '1' === $settings['clear_mqtt_discovery_password'];
-    unset($settings['clear_mqtt_discovery_password']);
+    unset($settings['clear_mqtt_discovery_password'], $settings[BssidNameHelper::CONFIG_KEY], $settings['bssid_names_submitted']);
+
+    if (isset($_POST['bssid_names_submitted'])) {
+        $bssidNames = is_array($_POST[BssidNameHelper::CONFIG_KEY] ?? null) ? $_POST[BssidNameHelper::CONFIG_KEY] : [];
+        $settings[BssidNameHelper::CONFIG_KEY] = BssidNameHelper::encode($bssidNames);
+    }
     $confirmDeviceTogglesChanged = $Config->read('confirm_device_toggles') !== ($settings['confirm_device_toggles'] ?? '0');
 
     if (!isset($settings['login'])) {
@@ -526,6 +532,8 @@ $autoFirmwareChannels = ['stable', 'dev'];
 
             <?php include __DIR__.'/elements/site_config_mqtt_discovery_panel.php'; ?>
 
+            <?php include __DIR__.'/elements/site_config_bssid_panel.php'; ?>
+
 
             <div class="settings-section">
             <div class="row g-4 settings-row">
@@ -594,3 +602,4 @@ $autoFirmwareChannels = ['stable', 'dev'];
         <?php include __DIR__.'/elements/cache_cleanup_panel.php'; ?>
 	</div>
 </div>
+<script src="<?php echo $urlHelper->js('compiled/site_config'); ?>"></script>
