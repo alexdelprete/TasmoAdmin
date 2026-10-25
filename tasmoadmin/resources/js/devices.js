@@ -326,6 +326,32 @@ function initCommandHelper() {
     updateBatchActionUi();
   });
 
+  $(".batchActionItem").on("click", function () {
+    const action = $(this).data("action");
+    const actionConfig = getBatchActionConfig(action);
+    $(".batchActionSelect").val(action).trigger("change");
+
+    if (
+      actionConfig &&
+      !actionConfig.requiresCommand &&
+      !actionConfig.requiresFile
+    ) {
+      $(".applyBatchAction").prop("disabled", false).trigger("click");
+      $(".batchActionSelect").val("");
+      updateBatchActionUi();
+      return;
+    }
+
+    $(".batchActionCommandWrapper:not(.d-none) input")
+      .add(".batchActionFileWrapper:not(.d-none) input")
+      .first()
+      .trigger("focus");
+  });
+
+  $(".batchActionCancel").on("click", function () {
+    $(".batchActionSelect").val("").trigger("change");
+  });
+
   $(".batchActionCommandInput").on("keypress", function (e) {
     if (e.which === 13) {
       e.preventDefault();
@@ -459,7 +485,16 @@ function syncSelectAllState() {
 
 function updateBatchActionUi() {
   const actionConfig = getBatchActionConfig($(".batchActionSelect").val());
-  const hasSelection = getSelectedDevices().length > 0;
+  const selectedCount = getSelectedDevices().length;
+  const hasSelection = selectedCount > 0;
+  const needsInput =
+    actionConfig !== null &&
+    (actionConfig.requiresCommand || actionConfig.requiresFile);
+
+  $(".devices-batch-count")
+    .text(selectedCount)
+    .toggleClass("d-none", !hasSelection);
+  $(".devices-batch-submit-col").toggleClass("d-none", !needsInput);
 
   $(".batchActionCommandWrapper").toggleClass(
     "d-none",

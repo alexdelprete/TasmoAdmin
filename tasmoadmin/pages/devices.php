@@ -117,10 +117,11 @@ if (isset($_POST['batch_action'], $_POST['device_ids'])) {
 						</div>
 					<?php } ?>
 					<div class="col col-12 col-lg-auto devices-batch-select-col">
-						<select class='form-select batchActionSelect'
+						<select class='form-select batchActionSelect visually-hidden'
 								name='batch_action_select'
 								form='devices-batch-form'
-								aria-label="<?php echo __('PLEASE_SELECT'); ?>"
+								tabindex='-1'
+								aria-hidden='true'
 						>
 							<option value=''><?php echo __('PLEASE_SELECT'); ?></option>
 							<option value='command'><?php echo __('BTN_COMMAND', 'DEVICES'); ?></option>
@@ -129,6 +130,25 @@ if (isset($_POST['batch_action'], $_POST['device_ids'])) {
 							<option value='restart'><?php echo __('RESTART_SELECTED', 'DEVICES'); ?></option>
 							<option value='delete'><?php echo __('DELETE_SELECTED', 'DEVICES'); ?></option>
 						</select>
+						<div class="dropdown devices-batch-menu">
+							<button type="button"
+									class="btn btn-secondary dropdown-toggle devices-batch-menu-toggle"
+									data-bs-toggle="dropdown"
+									aria-expanded="false"
+							>
+								<span class="ta-icon ta-icon-actions" aria-hidden="true"></span>
+								<span><?php echo __('BATCH_ACTIONS', 'DEVICES'); ?></span>
+								<span class="devices-batch-count d-none"></span>
+							</button>
+							<ul class="dropdown-menu devices-batch-menu-list">
+								<li><button type="button" class="dropdown-item batchActionItem" data-action="command"><span class="ta-icon ta-icon-terminal" aria-hidden="true"></span><?php echo __('BTN_COMMAND', 'DEVICES'); ?></button></li>
+								<li><button type="button" class="dropdown-item batchActionItem" data-action="backup"><span class="ta-icon ta-icon-backup" aria-hidden="true"></span><?php echo __('BATCH_BACKUP_CREATE', 'BACKUP'); ?></button></li>
+								<li><button type="button" class="dropdown-item batchActionItem" data-action="restore"><span class="ta-icon ta-icon-restore" aria-hidden="true"></span><?php echo __('BATCH_BACKUP_RESTORE', 'BACKUP'); ?></button></li>
+								<li><button type="button" class="dropdown-item batchActionItem" data-action="restart"><span class="ta-icon ta-icon-restart" aria-hidden="true"></span><?php echo __('RESTART_SELECTED', 'DEVICES'); ?></button></li>
+								<li><hr class="dropdown-divider"></li>
+								<li><button type="button" class="dropdown-item batchActionItem batchActionItem-danger" data-action="delete"><span class="ta-icon ta-icon-trash" aria-hidden="true"></span><?php echo __('DELETE_SELECTED', 'DEVICES'); ?></button></li>
+							</ul>
+						</div>
 					</div>
 					<div class="col col-12 col-lg batchActionCommandWrapper devices-batch-command-col d-none">
 						<input type='text'
@@ -139,25 +159,48 @@ if (isset($_POST['batch_action'], $_POST['device_ids'])) {
 						>
 					</div>
 					<div class="col col-12 col-lg batchActionFileWrapper devices-batch-command-col d-none">
-						<input type='file'
-							   name='restore_backup'
-							   form='devices-batch-form'
-							   class='form-control batchActionFileInput'
-							   accept='.dmp'
+						<div class="input-group">
+							<input type='file'
+								   name='restore_backup'
+								   form='devices-batch-form'
+								   class='form-control batchActionFileInput'
+								   accept='.dmp'
+								   aria-describedby='batchRestoreWarning'
+							>
+							<span class="input-group-text devices-restore-warning"
+								  title="<?php echo __('RESTORE_WARNING', 'BACKUP'); ?>"
+								  data-bs-toggle="tooltip"
+							>
+								<span class="ta-icon ta-icon-alert" aria-hidden="true"></span>
+								<span class="visually-hidden" id="batchRestoreWarning"><?php echo __('RESTORE_WARNING', 'BACKUP'); ?></span>
+							</span>
+						</div>
+					</div>
+					<div class="col col-12 col-lg-auto devices-batch-submit-col d-none">
+						<div class="d-flex gap-2">
+							<button type='button' form='devices-batch-form' class='btn btn-primary applyBatchAction flex-grow-1' disabled>
+								<?php echo __('PLEASE_SELECT'); ?>
+							</button>
+							<button type='button'
+									class='btn btn-secondary batchActionCancel devices-icon-btn'
+									title="<?php echo __('CANCEL'); ?>"
+									aria-label="<?php echo __('CANCEL'); ?>"
+							>
+								<span class="ta-icon ta-icon-x" aria-hidden="true"></span>
+							</button>
+						</div>
+					</div>
+					<div class="col col-auto ms-lg-auto devices-batch-add-col">
+						<a href='<?php echo _BASEURL_; ?>device_action/add'
+						   class="btn btn-secondary devices-icon-btn"
+						   title="<?php echo __('TABLE_HEAD_NEW_DEVICE', 'DEVICES'); ?>"
+						   aria-label="<?php echo __('TABLE_HEAD_NEW_DEVICE', 'DEVICES'); ?>"
+						   data-bs-toggle="tooltip"
 						>
-						<small class="form-text text-body-secondary"><?php echo __('RESTORE_WARNING', 'BACKUP'); ?></small>
-					</div>
-					<div class="col col-12 col-sm-auto devices-batch-submit-col">
-						<button type='button' form='devices-batch-form' class='btn btn-primary applyBatchAction w-100' disabled>
-							<?php echo __('PLEASE_SELECT'); ?>
-						</button>
-					</div>
-					<div class="col col-12 col-lg-auto ms-lg-auto devices-batch-add-col">
-						<a href='<?php echo _BASEURL_; ?>device_action/add' class="btn btn-primary w-100">
-							<?php echo __('TABLE_HEAD_NEW_DEVICE', 'DEVICES'); ?>
+							<span class="ta-icon ta-icon-plus" aria-hidden="true"></span>
 						</a>
 					</div>
-						<div class="col col-12 col-lg-auto devices-toolbar-lock-col">
+						<div class="col col-auto devices-toolbar-lock-col">
 						<div class="form-check ps-0 devices-protection-toggle">
 							<input type="checkbox"
 								   class="form-check-input ignoreProtections d-none"
