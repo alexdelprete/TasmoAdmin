@@ -65,9 +65,12 @@ $viewHelper = $container->get(ViewHelper::class);
 				try {
 					window.localStorage.removeItem('nightmode_override');
 				} catch (e) {}
-				if (<?php echo json_encode((string) $Config->read('nightmode')); ?> === 'auto') {
+				var themeMode = <?php echo json_encode((string) $Config->read('nightmode')); ?>;
+				if (themeMode === 'auto') {
 					var hour = new Date().getHours();
 					document.body.classList.toggle('nightmode', hour >= 18 || hour <= 8);
+				} else if (themeMode === 'system' && window.matchMedia) {
+					document.body.classList.toggle('nightmode', window.matchMedia('(prefers-color-scheme: dark)').matches);
 				}
 			})();
 		</script>

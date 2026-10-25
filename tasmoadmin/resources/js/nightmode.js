@@ -14,6 +14,7 @@ function resolveNightmodeEnabled(
   configMode = "auto",
   override = null,
   date = new Date(),
+  prefersDark = false,
 ) {
   const normalizedOverride = normalizeNightmodeOverride(override);
 
@@ -31,6 +32,10 @@ function resolveNightmodeEnabled(
 
   if (configMode === "auto") {
     return getAutomaticNightmodeState(date);
+  }
+
+  if (configMode === "system") {
+    return prefersDark === true;
   }
 
   return false;
