@@ -1003,6 +1003,15 @@ function fitDeviceListToViewport() {
     "--ta-device-list-max-height",
     `${Math.max(240, Math.floor(available))}px`,
   );
+
+  const pageOverflow =
+    document.documentElement.scrollHeight - window.innerHeight;
+  if (pageOverflow > 0) {
+    list.style.setProperty(
+      "--ta-device-list-max-height",
+      `${Math.max(240, Math.floor(available - pageOverflow))}px`,
+    );
+  }
 }
 
 function initDeviceListViewport() {
