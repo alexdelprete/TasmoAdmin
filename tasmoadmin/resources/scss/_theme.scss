@@ -1777,7 +1777,8 @@ body.nightmode {
 }
 
 // Device list scrollbar: 6 px, centred between the last row icon and the
-// panel border (the actions cell gets the same right padding as the panel)
+// panel border. The actions cell padding is the panel padding (16 px) minus
+// the 7 px between the 18 px icon and the edge of its 32 px button.
 
 #{$ta} .devices-page .devices-table-panel .table-responsive::-webkit-scrollbar {
   width: 6px;
@@ -1807,5 +1808,5 @@ body.nightmode {
 
 #{$ta} .devices-page #device-list > tbody > tr > td.actions,
 #{$ta} .devices-page #device-list > thead > tr > th[data-column-id="actions"] {
-  padding-right: 16px !important;
+  padding-right: 9px !important;
 }
