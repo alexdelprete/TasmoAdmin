@@ -45,3 +45,5 @@ portable/xampp.zip
 
 /.storage/
 /goals/
+
+.env
