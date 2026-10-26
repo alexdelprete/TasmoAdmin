@@ -14,11 +14,22 @@ use TasmoAdmin\Mqtt\MqttDiscoveryService;
 use TasmoAdmin\Mqtt\PhpMqttClientFactory;
 use TasmoAdmin\Mqtt\SystemTimeProvider;
 use TasmoAdmin\Sonoff;
+use TasmoAdmin\Storage\StorageBackend;
+use TasmoAdmin\Storage\StorageErrorPage;
 use TasmoAdmin\Tasmota\ResponseParser;
 
 $container = new Container();
 
-$container->set(Config::class, new Config(_DATADIR_, _APPROOT_));
+try {
+    $storageBackend = StorageBackend::fromEnvironment(_DATADIR_, _TMPDIR_);
+} catch (Throwable $exception) {
+    StorageErrorPage::render($exception);
+
+    exit(1);
+}
+$container->set(StorageBackend::class, $storageBackend);
+
+$container->set(Config::class, new Config(_DATADIR_, _APPROOT_, $storageBackend->getConfigStorage()));
 $container->set(
     UrlHelper::class,
     new UrlHelper(
@@ -32,7 +43,7 @@ $container->set(DevicePasswordKeyProvider::class, new DevicePasswordKeyProvider(
 $container->set(DevicePasswordCipher::class, new DevicePasswordCipher($container->get(DevicePasswordKeyProvider::class)));
 $container->set(ResponseParser::class, new ResponseParser());
 $container->set(DeviceRepository::class, new DeviceRepository(
-    _CSVFILE_,
+    $storageBackend->getDeviceStorage(),
     _TMPDIR_,
     $container->get(DevicePasswordCipher::class),
     '1' === $container->get(Config::class)->read('confirm_device_toggles')

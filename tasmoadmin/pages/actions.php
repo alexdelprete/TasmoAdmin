@@ -7,6 +7,7 @@ use TasmoAdmin\Helper\CacheCleanupHelper;
 use TasmoAdmin\Helper\FirmwareFolderHelper;
 use TasmoAdmin\Helper\SupportedLanguageHelper;
 use TasmoAdmin\Sonoff;
+use TasmoAdmin\Storage\StorageBackend;
 
 $Sonoff = $container->get(Sonoff::class);
 
@@ -107,22 +108,12 @@ if (isset($_POST['clean'])) {
     }
 
     if (in_array('config', $what)) {
-        $files = glob(_DATADIR_.'/*'); // get all file names
-        foreach ($files as $file) { // iterate files
-            if (is_file($file) && (strpos($file, 'MyConfig.json') || strpos($file, 'MyConfig.php'))) {
-                @unlink($file);
-            } // delete file
-        }
+        $container->get(StorageBackend::class)->getConfigStorage()->clear();
         session_destroy();
     }
 
     if (in_array('devices', $what)) {
-        $files = glob(_DATADIR_.'/*'); // get all file names
-        foreach ($files as $file) { // iterate files
-            if (is_file($file) && strpos($file, 'devices.csv')) {
-                @unlink($file);
-            } // delete file
-        }
+        $container->get(StorageBackend::class)->getDeviceStorage()->clear();
 
         $devicePasswordKeyFile = _DATADIR_.DevicePasswordKeyProvider::SIDECAR_FILENAME;
         if (is_file($devicePasswordKeyFile)) {

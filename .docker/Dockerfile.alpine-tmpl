@@ -63,6 +63,10 @@ RUN apk add --no-cache --virtual .build-dependencies \
         php85-session \
         php85-zip \
         php85-mbstring \
+        php85-pdo \
+        php85-pdo_sqlite \
+        php85-pdo_mysql \
+        php85-pdo_pgsql \
         php85 \
     \
     && S6_ARCH="${BUILD_ARCH}" \

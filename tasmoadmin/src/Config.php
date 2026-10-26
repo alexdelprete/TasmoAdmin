@@ -2,7 +2,8 @@
 
 namespace TasmoAdmin;
 
-use Symfony\Component\Filesystem\Filesystem;
+use TasmoAdmin\Storage\ConfigStorage;
+use TasmoAdmin\Storage\JsonFileConfigStorage;
 
 class Config
 {
@@ -13,9 +14,7 @@ class Config
 
     private string $appRoot;
 
-    private string $cfgFile;
-
-    private Filesystem $filesystem;
+    private ConfigStorage $storage;
 
     private ?DevicePasswordCipher $configPasswordCipher = null;
 
@@ -63,13 +62,12 @@ class Config
 
     private array $cachedConfig = [];
 
-    public function __construct(string $dataDir, string $appRoot)
+    public function __construct(string $dataDir, string $appRoot, ?ConfigStorage $storage = null)
     {
         $this->dataDir = $dataDir;
         $this->appRoot = $appRoot;
-        $this->cfgFile = $this->dataDir.'MyConfig.json';
+        $this->storage = $storage ?? new JsonFileConfigStorage($dataDir);
         $cfgFile140 = $this->dataDir.'MyConfig.php';       // for tag 1.4.0 migration
-        $this->filesystem = new Filesystem();
 
         // init default values
         $this->defaults['ota_server_ip'] = !empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '';
@@ -100,7 +98,7 @@ class Config
             exit($this->dataDir.' is NOT WRITEABLE! | __construct()');
         }
 
-        if (!file_exists($this->cfgFile)) { // create file if not exists
+        if (!$this->storage->exists()) { // create the configuration if it does not exist
             $config = [];
             /*
              * MIGRATE FROM MyConfig.php tp MyConfig.json
@@ -124,6 +122,8 @@ class Config
                 $this->write($configName, $configValue);
             }
         }
+
+        $config = $this->readAll();
 
         $currentGitTag = $this->resolveCurrentGitTag();
         if (null !== $currentGitTag && $config['current_git_tag'] !== $currentGitTag) {
@@ -179,17 +179,7 @@ class Config
             return $this->cachedConfig;
         }
 
-        $configJSON = file_get_contents($this->cfgFile);
-        if (false === $configJSON) {
-            var_dump(debug_backtrace());
-
-            exit('could not read MyConfig.json');
-        }
-
-        $config = json_decode($configJSON, true);
-        if (0 !== json_last_error()) {
-            exit('JSON CONFIG ERROR: '.json_last_error().' => '.json_last_error_msg());
-        }
+        $config = $this->storage->load();
 
         $this->cachedConfig = $this->decryptSensitiveValues($config);
 
@@ -306,36 +296,7 @@ class Config
         $encryptedConfig = $this->encryptSensitiveValues($config);
         $this->cachedConfig = $this->decryptSensitiveValues($encryptedConfig);
 
-        $configJson = json_encode($encryptedConfig, JSON_PRETTY_PRINT);
-        if (!is_dir($this->dataDir)) {
-            var_dump(debug_backtrace());
-
-            exit($this->dataDir.' is NO DIR! | write()');
-        }
-        if (!is_writable($this->dataDir)) {
-            var_dump(debug_backtrace());
-
-            exit($this->dataDir.' is NOT WRITEABLE! | write()');
-        }
-        if (!file_exists($this->cfgFile)) {
-            $this->filesystem->touch($this->cfgFile);
-        }
-        if (!is_writable($this->cfgFile)) {
-            var_dump(debug_backtrace());
-
-            exit($this->cfgFile.' is NOT WRITEABLE! | write()');
-        }
-
-        if (empty($configJson)) {
-            var_dump($configJson);
-            var_dump(debug_backtrace());
-
-            exit('configJSON IS EMPTY! | write()');
-        }
-
-        $tempFile = $this->filesystem->tempnam($this->dataDir, 'config');
-        $this->filesystem->dumpFile($tempFile, $configJson);
-        $this->filesystem->rename($tempFile, $this->cfgFile, true);
+        $this->storage->save($encryptedConfig);
     }
 
     private function encryptSensitiveValues(array $config): array

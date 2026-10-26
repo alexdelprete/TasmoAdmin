@@ -60,12 +60,39 @@ jobs:
     strategy:
       matrix:
         php-version: ['8.5', '8.4', '8.3', '8.2']
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_DATABASE: tasmoadmin_test
+          MARIADB_USER: tasmo
+          MARIADB_PASSWORD: tasmo
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: tasmoadmin_test
+          POSTGRES_USER: tasmo
+          POSTGRES_PASSWORD: tasmo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U tasmo"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      TASMO_TEST_DB_URIS: mysql://tasmo:tasmo@127.0.0.1:3306/tasmoadmin_test,postgres://tasmo:tasmo@127.0.0.1:5432/tasmoadmin_test
     steps:
     - uses: actions/checkout@v6
     - name: Install PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php-version }}
+        extensions: pdo_sqlite, pdo_mysql, pdo_pgsql
     - name: Install dependencies
       run: composer install --prefer-dist -d tasmoadmin/
     - name: Run tests
