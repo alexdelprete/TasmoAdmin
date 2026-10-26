@@ -5,6 +5,7 @@ use Symfony\Component\BrowserKit\HttpBrowser;
 use TasmoAdmin\DeviceRepository;
 use TasmoAdmin\Helper\BssidNameHelper;
 use TasmoAdmin\Helper\CacheCleanupHelper;
+use TasmoAdmin\Helper\EnvironmentHelper;
 use TasmoAdmin\Helper\GuzzleFactory;
 use TasmoAdmin\Helper\HtmlAttributeHelper;
 use TasmoAdmin\Helper\LoginHelper;
@@ -32,7 +33,9 @@ if (isset($_POST['clean_temp_cache'])) {
     }
     $confirmDeviceTogglesChanged = $Config->read('confirm_device_toggles') !== ($settings['confirm_device_toggles'] ?? '0');
 
-    if (!isset($settings['login'])) {
+    if (EnvironmentHelper::isLoginDisabled()) {
+        unset($settings['login'], $settings['username'], $settings['password']);
+    } elseif (!isset($settings['login'])) {
         $settings['login'] = '0';
     }
 
@@ -78,7 +81,7 @@ if (isset($_POST['clean_temp_cache'])) {
         $settings['password'] = LoginHelper::hashPassword($settings['password']);
     }
 
-    if ('0' === $settings['login']) {
+    if ('0' === ($settings['login'] ?? null)) {
         unset($settings['password'], $settings['username']);
     }
 
@@ -143,11 +146,15 @@ $autoFirmwareChannels = ['stable', 'dev'];
 							   type="checkbox"
 							   value="1"
 							   id="cb_login"
-							   name='login' <?php echo '1' == $config['login'] ? 'checked="checked"' : ''; ?>>
+							   name='login' <?php echo '1' == $config['login'] && !EnvironmentHelper::isLoginDisabled() ? 'checked="checked"' : ''; ?>
+							   <?php echo EnvironmentHelper::isLoginDisabled() ? 'disabled aria-describedby="loginDisabledHelp"' : ''; ?>>
 						<label class="form-check-label" for="cb_login">
 							<?php echo __('CONFIG_LOGIN_ENABLE', 'USER_CONFIG'); ?>
 						</label>
 					</div>
+					<?php if (EnvironmentHelper::isLoginDisabled()) { ?>
+						<small class="form-text text-body-secondary d-block" id="loginDisabledHelp"><?php echo __('CONFIG_LOGIN_DISABLED_BY_ENV', 'USER_CONFIG'); ?></small>
+					<?php } ?>
 					</div>
 				</div>
 				<div class="col col-12 col-md-6">
@@ -191,6 +198,7 @@ $autoFirmwareChannels = ['stable', 'dev'];
 					<input type="text"
 						   class="form-control"
 						   id="username"
+						   <?php echo EnvironmentHelper::isLoginDisabled() ? 'disabled' : ''; ?>
 						   name='username'
 						   placeholder="<?php echo __('PLEASE_ENTER'); ?>"
 						   value='<?php echo HtmlAttributeHelper::escape($config['username']); ?>'
@@ -203,6 +211,7 @@ $autoFirmwareChannels = ['stable', 'dev'];
 					<input type="password"
 						   class="form-control"
 						   id="password"
+						   <?php echo EnvironmentHelper::isLoginDisabled() ? 'disabled' : ''; ?>
 						   placeholder="<?php echo __('PLEASE_ENTER'); ?>"
 						   name='password'
 						   value=''
