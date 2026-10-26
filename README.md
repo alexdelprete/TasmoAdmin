@@ -86,7 +86,8 @@ Some environment variables are configured to allow easier customisation of the a
 - `TASMO_BASEURL` - Customise the base URL for the application
 - `TASMO_TMPDIR` - Directory for sessions and temporary cache files, including a trailing slash. Defaults to `./tasmoadmin/tmp/`
 - `TASMO_DEBUG` - Set to `true` to display PHP errors. Disabled by default.
-- `NO_AUTH` - Set to `true` to bypass the built-in login when authentication is handled externally (reverse proxy, SSO). The "Activate Login" option in Settings is then ignored; with `false` that option decides
+- `TASMO_DISABLE_LOGIN` - Set to `true` to bypass the built-in login when authentication is handled externally (reverse proxy, SSO). The "Activate Login" option in Settings is then ignored; with `false` that option decides
+- `NO_AUTH` - Earlier name of `TASMO_DISABLE_LOGIN`, still accepted; only read when `TASMO_DISABLE_LOGIN` is not set
 - `TASMO_DEVICE_PASSWORD_KEY` - Base64-encoded 32-byte secret for device password encryption at rest
 - `TASMO_DEVICE_PASSWORD_KEY_FILE` - Path of a file containing that secret, for Docker secrets. If both are set they must contain the same key
 - `TASMO_ALLOW_CROSS_SITE_IFRAME` - Set to `true` to embed TasmoAdmin in another HTTPS site, such as Home Assistant or Organizr; HTTP requests remain restricted

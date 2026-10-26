@@ -102,7 +102,7 @@ $langHelper->dumpJson();
 
 if ((isset($_SESSION['login']) && '1' == $_SESSION['login'])
     || '0' == $Config->read('login')
-    || EnvironmentHelper::isEnabled('NO_AUTH')
+    || EnvironmentHelper::isLoginDisabled()
 ) {
     $loggedin = true;
 }
