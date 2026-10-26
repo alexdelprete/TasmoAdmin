@@ -80,7 +80,7 @@ Check the [guides](https://github.com/TasmoAdmin/TasmoAdmin/wiki) on the Wiki fo
 
 ## Configuration
 
-Some environment variables are configured to allow easier customisation of the application
+Some environment variables are configured to allow easier customisation of the application. [`.env.template`](.env.template) lists all of them with their defaults: copy it to `.env` next to your `docker-compose.yml`, adjust it, and load it with `env_file: [.env]` in the TasmoAdmin service.
 
 - `TASMO_DATADIR` - Data directory, including a trailing slash. Defaults to `./tasmoadmin/data/`
 - `TASMO_BASEURL` - Customise the base URL for the application
