@@ -10,6 +10,30 @@ class EnvironmentHelperTest extends TestCase
     protected function tearDown(): void
     {
         putenv('NO_AUTH');
+        putenv(EnvironmentHelper::DISABLE_LOGIN);
+    }
+
+    public function testLoginIsDisabledByTasmoDisableLogin(): void
+    {
+        self::assertFalse(EnvironmentHelper::isLoginDisabled());
+
+        putenv('TASMO_DISABLE_LOGIN=true');
+        self::assertTrue(EnvironmentHelper::isLoginDisabled());
+
+        putenv('TASMO_DISABLE_LOGIN=false');
+        self::assertFalse(EnvironmentHelper::isLoginDisabled());
+    }
+
+    public function testNoAuthIsStillAcceptedWhenTasmoDisableLoginIsNotSet(): void
+    {
+        putenv('NO_AUTH=true');
+        self::assertTrue(EnvironmentHelper::isLoginDisabled());
+
+        putenv('TASMO_DISABLE_LOGIN=');
+        self::assertTrue(EnvironmentHelper::isLoginDisabled(), 'an empty TASMO_DISABLE_LOGIN counts as not set');
+
+        putenv('TASMO_DISABLE_LOGIN=false');
+        self::assertFalse(EnvironmentHelper::isLoginDisabled(), 'TASMO_DISABLE_LOGIN wins over NO_AUTH');
     }
 
     public function testIsEnabledReturnsTrueForTruthyValues(): void
