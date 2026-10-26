@@ -1732,3 +1732,46 @@ body.nightmode {
   text-underline-offset: 3px;
   cursor: help;
 }
+
+// Wi-Fi cell: percentage as a chip under the bars; BSSID cell: name with the
+// BSSID as a chip underneath
+
+#{$ta} .devices-page #device-list .wifi-signal {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-style: normal;
+}
+
+#{$ta} .devices-page #device-list .wifi-pct,
+#{$ta} .devices-page #device-list .bssid-mac {
+  padding: 0 6px;
+  border: 1px solid var(--ta-border);
+  border-radius: 999px;
+  background-color: var(--ta-raised);
+  color: var(--ta-text);
+  font-family: var(--ta-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+#{$ta} .devices-page #device-list .wifi-text {
+  justify-content: center;
+}
+
+#{$ta} .devices-page #device-list td.bssid span.bssid-named {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-decoration: none;
+  cursor: default;
+}
+
+#{$ta} .devices-page #device-list td.bssid .bssid-name {
+  color: var(--ta-text-strong);
+  font-weight: 500;
+}
