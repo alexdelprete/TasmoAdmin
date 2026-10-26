@@ -2,6 +2,7 @@
 
 use TasmoAdmin\Backup\BackupHelper;
 use TasmoAdmin\Database\DatabaseExporter;
+use TasmoAdmin\Database\SnapshotStore;
 use TasmoAdmin\DevicePasswordKeyProvider;
 use TasmoAdmin\DeviceRepository;
 use TasmoAdmin\Helper\CacheCleanupHelper;
@@ -77,7 +78,7 @@ if (isset($_GET['downloadBackup'])) {
 }
 
 if (isset($_GET['downloadStoredBackup'])) {
-    $backup = $container->get(BackupHelper::class)->getStore()?->get((int) $_GET['downloadStoredBackup']);
+    $backup = $container->get(BackupHelper::class)->getStore()?->get((string) $_GET['downloadStoredBackup']);
     if (null === $backup || null === $backup->content) {
         http_response_code(404);
 
@@ -103,13 +104,34 @@ if (isset($_GET['exportDatabase'])) {
         exit;
     }
 
-    $export = (new DatabaseExporter($connection))->export();
+    $export = (new DatabaseExporter($connection, $container->get(BackupHelper::class)->getStore()))->export();
     header('Content-type: application/gzip');
     header('Content-Disposition: attachment; filename="tasmoadmin-'.date('Ymd-His').'.json.gz"');
     header('Content-Length: '.strlen($export));
     ob_clean();
     flush();
     echo $export;
+
+    exit;
+}
+
+if (isset($_GET['exportSnapshot'])) {
+    $connection = $container->get(StorageBackend::class)->getConnection();
+    $snapshots = null === $connection ? null : new SnapshotStore($connection);
+    $requested = (string) $_GET['exportSnapshot'];
+    $snapshot = 'latest' === $requested ? $snapshots?->latest() : $snapshots?->get((int) $requested);
+    if (null === $snapshot || null === $snapshot->content) {
+        http_response_code(404);
+
+        exit;
+    }
+
+    header('Content-type: application/gzip');
+    header('Content-Disposition: attachment; filename="tasmoadmin-snapshot-'.$snapshot->createdAt->format('Ymd-His').'.json.gz"');
+    header('Content-Length: '.strlen($snapshot->content));
+    ob_clean();
+    flush();
+    echo $snapshot->content;
 
     exit;
 }
@@ -144,6 +166,13 @@ if (isset($_POST['clean'])) {
 
     if (in_array('firmwares', $what)) {
         FirmwareFolderHelper::clean(_DATADIR_.'firmwares/');
+    }
+
+    if (array_intersect(['config', 'devices'], $what)) {
+        $resetConnection = $container->get(StorageBackend::class)->getConnection();
+        if (null !== $resetConnection) {
+            (new SnapshotStore($resetConnection))->create(SnapshotStore::REASON_BEFORE_RESET);
+        }
     }
 
     if (in_array('config', $what)) {

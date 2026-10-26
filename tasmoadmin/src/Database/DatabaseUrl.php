@@ -50,11 +50,15 @@ class DatabaseUrl
         $uri = trim((string) ($environment[self::ENV_URI] ?? ''));
         $uriFile = trim((string) ($environment[self::ENV_URI_FILE] ?? ''));
 
-        if ('' === $uri && '' !== $uriFile) {
+        if ('' !== $uriFile) {
             if (!is_readable($uriFile)) {
                 throw new DatabaseConfigurationException(sprintf('%s points to %s, which cannot be read.', self::ENV_URI_FILE, $uriFile));
             }
-            $uri = trim((string) file_get_contents($uriFile));
+            $fileUri = trim((string) file_get_contents($uriFile));
+            if ('' !== $uri && $uri !== $fileUri) {
+                throw new DatabaseConfigurationException(sprintf('%s and %s are both set but differ; set only one.', self::ENV_URI, self::ENV_URI_FILE));
+            }
+            $uri = $fileUri;
         }
 
         if ('' === $uri) {

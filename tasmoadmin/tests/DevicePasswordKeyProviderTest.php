@@ -20,6 +20,37 @@ class DevicePasswordKeyProviderTest extends TestCase
     protected function tearDown(): void
     {
         putenv(DevicePasswordKeyProvider::ENV_NAME);
+        putenv(DevicePasswordKeyProvider::ENV_FILE_NAME);
+    }
+
+    public function testUsesKeyFromSecretFile(): void
+    {
+        $encodedKey = base64_encode(random_bytes(DevicePasswordKeyProvider::KEY_LENGTH));
+        $secret = vfsStream::newFile('device_password_key')->withContent($encodedKey."\n")->at($this->root);
+        putenv(DevicePasswordKeyProvider::ENV_FILE_NAME.'='.$secret->url());
+
+        $provider = new DevicePasswordKeyProvider($this->getDataDir());
+
+        self::assertSame(base64_decode($encodedKey, true), $provider->getKey());
+        self::assertFileDoesNotExist($provider->getKeyFilePath());
+    }
+
+    public function testRejectsDifferentKeysInVariableAndSecretFile(): void
+    {
+        $secret = vfsStream::newFile('device_password_key')->withContent(base64_encode(random_bytes(DevicePasswordKeyProvider::KEY_LENGTH)))->at($this->root);
+        putenv(DevicePasswordKeyProvider::ENV_FILE_NAME.'='.$secret->url());
+        putenv(DevicePasswordKeyProvider::ENV_NAME.'='.base64_encode(random_bytes(DevicePasswordKeyProvider::KEY_LENGTH)));
+
+        $this->expectException(DeviceCredentialException::class);
+        (new DevicePasswordKeyProvider($this->getDataDir()))->getKey();
+    }
+
+    public function testRejectsUnreadableSecretFile(): void
+    {
+        putenv(DevicePasswordKeyProvider::ENV_FILE_NAME.'='.$this->root->url().'/missing');
+
+        $this->expectException(DeviceCredentialException::class);
+        (new DevicePasswordKeyProvider($this->getDataDir()))->getKey();
     }
 
     public function testUsesValidEnvironmentKey(): void

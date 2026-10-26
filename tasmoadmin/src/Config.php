@@ -61,6 +61,8 @@ class Config
         'mqtt_discovery_subscriptions' => 'tele/+/LWT',
         'mqtt_discovery_timeout_seconds' => '5',
         'backup_keep_count' => '10',
+        'backup_storage' => 'database',
+        'snapshot_keep_count' => '30',
     ];
 
     private array $cachedConfig = [];

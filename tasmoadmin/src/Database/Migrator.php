@@ -12,7 +12,7 @@ use Doctrine\DBAL\Exception;
  */
 class Migrator
 {
-    public const SCHEMA_VERSION = '1';
+    public const SCHEMA_VERSION = '2';
 
     private Connection $connection;
 

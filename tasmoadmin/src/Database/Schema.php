@@ -24,6 +24,7 @@ class Schema
     public const SETTINGS = 'ta_settings';
     public const DEVICE_BACKUPS = 'ta_device_backups';
     public const META = 'ta_meta';
+    public const SNAPSHOTS = 'ta_snapshots';
 
     public static function build(): DbalSchema
     {
@@ -96,6 +97,21 @@ class Schema
             [self::index('ta_device_backups_device', 'device_id', 'created_at')]
         );
 
+        $snapshots = self::table(
+            self::SNAPSHOTS,
+            [
+                self::column('id', Types::INTEGER, ['autoincrement' => true]),
+                self::column('created_at', Types::DATETIME_IMMUTABLE),
+                self::column('reason', Types::STRING, ['length' => 32, 'default' => '']),
+                self::column('devices', Types::INTEGER, ['default' => 0]),
+                self::column('settings', Types::INTEGER, ['default' => 0]),
+                self::column('size', Types::INTEGER, ['default' => 0]),
+                self::column('content', Types::BLOB),
+            ],
+            ['id'],
+            [self::index('ta_snapshots_created_at', 'created_at')]
+        );
+
         $meta = self::table(
             self::META,
             [
@@ -106,7 +122,7 @@ class Schema
         );
 
         return DbalSchema::editor()
-            ->setTables($devices, $channels, $settings, $backups, $meta)
+            ->setTables($devices, $channels, $settings, $backups, $snapshots, $meta)
             ->create()
         ;
     }
@@ -116,7 +132,7 @@ class Schema
      */
     public static function tableNames(): array
     {
-        return [self::DEVICES, self::DEVICE_CHANNELS, self::SETTINGS, self::DEVICE_BACKUPS, self::META];
+        return [self::DEVICES, self::DEVICE_CHANNELS, self::SETTINGS, self::DEVICE_BACKUPS, self::SNAPSHOTS, self::META];
     }
 
     /**

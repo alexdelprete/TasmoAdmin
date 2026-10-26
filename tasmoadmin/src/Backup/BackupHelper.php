@@ -26,7 +26,7 @@ class BackupHelper
 
     private bool $allowNonUploadedFiles;
 
-    private ?BackupStore $store;
+    private ?BackupStorage $store;
 
     public function __construct(
         DeviceRepository $deviceRepository,
@@ -36,7 +36,7 @@ class BackupHelper
         string $baseUrl = '',
         ?string $restorePath = null,
         bool $allowNonUploadedFiles = false,
-        ?BackupStore $store = null
+        ?BackupStorage $store = null
     ) {
         $this->deviceRepository = $deviceRepository;
         $this->sonoff = $sonoff;
@@ -49,7 +49,7 @@ class BackupHelper
         $this->store = $store;
     }
 
-    public function getStore(): ?BackupStore
+    public function getStore(): ?BackupStorage
     {
         return $this->store;
     }
@@ -84,7 +84,7 @@ class BackupHelper
     /**
      * Restores a backup from the history to the device it was taken from.
      */
-    public function restoreStored(int $backupId): BackupResults
+    public function restoreStored(string $backupId): BackupResults
     {
         $backup = $this->store?->get($backupId);
         if (null === $backup || null === $backup->content) {
@@ -114,7 +114,7 @@ class BackupHelper
     /**
      * A zip of the given stored backups, written to the backup folder.
      *
-     * @param int[] $backupIds
+     * @param string[] $backupIds
      */
     public function createZipFromStore(array $backupIds): ?string
     {
@@ -125,7 +125,7 @@ class BackupHelper
         $this->createCleanBackupDir();
         $files = [];
         foreach ($backupIds as $backupId) {
-            $backup = $this->store->get((int) $backupId);
+            $backup = $this->store->get((string) $backupId);
             if (null === $backup || null === $backup->content) {
                 continue;
             }

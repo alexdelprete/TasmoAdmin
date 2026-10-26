@@ -7,6 +7,7 @@ use TasmoAdmin\Database\ConnectionFactory;
 use TasmoAdmin\Database\DatabaseUrl;
 use TasmoAdmin\Database\FileImporter;
 use TasmoAdmin\Database\Migrator;
+use TasmoAdmin\Database\SnapshotStore;
 
 /**
  * Chooses where TasmoAdmin keeps its data.
@@ -65,6 +66,12 @@ class StorageBackend
         $migrator = new Migrator($connection);
         $migrator->migrateIfNeeded();
         (new FileImporter($connection, $migrator, $dataDir, $tmpDir))->importIfNeeded();
+
+        try {
+            (new SnapshotStore($connection))->createIfDue();
+        } catch (\Throwable $exception) {
+            error_log('TasmoAdmin: the daily snapshot failed: '.$exception->getMessage());
+        }
 
         return new self(
             new DatabaseConfigStorage($connection),

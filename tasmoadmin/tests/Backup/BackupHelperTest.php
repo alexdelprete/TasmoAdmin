@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use TasmoAdmin\Backup\BackupHelper;
 use TasmoAdmin\Backup\BackupResult;
 use TasmoAdmin\Backup\BackupResults;
-use TasmoAdmin\Backup\BackupStore;
+use TasmoAdmin\Backup\BackupStorage;
 use TasmoAdmin\Config;
 use TasmoAdmin\Device;
 use TasmoAdmin\DeviceRepository;
@@ -86,11 +86,11 @@ class BackupHelperTest extends TestCase
         $config = $this->createMock(Config::class);
         $config->method('read')->willReturnMap([['backup_keep_count', '3']]);
 
-        $store = $this->createMock(BackupStore::class);
+        $store = $this->createMock(BackupStorage::class);
         $store->expects(self::once())
             ->method('save')
             ->with($device, '1-socket-1.dmp', 'backup-content', '16.0.0')
-            ->willReturn(5)
+            ->willReturn('5')
         ;
         $store->expects(self::once())->method('prune')->with(1, 3);
 

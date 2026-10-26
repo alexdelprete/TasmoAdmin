@@ -9,9 +9,9 @@ use TasmoAdmin\Database\Schema;
 use TasmoAdmin\Device;
 
 /**
- * Device configuration backups (.dmp files) kept in ta_device_backups.
+ * Device backups kept in ta_device_backups.
  */
-class BackupStore
+class DatabaseBackupStore implements BackupStorage
 {
     private Connection $connection;
 
@@ -20,16 +20,27 @@ class BackupStore
         $this->connection = $connection;
     }
 
-    public function save(Device $device, string $filename, string $content, string $firmware = '', ?\DateTimeImmutable $createdAt = null): int
+    public function getType(): string
     {
+        return self::DATABASE;
+    }
+
+    public function save(Device $device, string $filename, string $content, string $firmware = '', ?\DateTimeImmutable $createdAt = null): string
+    {
+        return $this->store(StoredBackup::create($device, $device->getName(), $filename, $content, $firmware, $createdAt));
+    }
+
+    public function store(StoredBackup $backup): string
+    {
+        $content = (string) $backup->content;
         $this->connection->insert(
             Schema::DEVICE_BACKUPS,
             [
-                'device_id' => $device->id,
-                'device_name' => mb_substr($device->getName(), 0, 255),
-                'created_at' => $createdAt ?? new \DateTimeImmutable('now', new \DateTimeZone('UTC')),
-                'firmware' => mb_substr($firmware, 0, 128),
-                'filename' => mb_substr($filename, 0, 255),
+                'device_id' => $backup->deviceId,
+                'device_name' => $backup->deviceName,
+                'created_at' => $backup->createdAt->setTimezone(new \DateTimeZone('UTC')),
+                'firmware' => $backup->firmware,
+                'filename' => $backup->filename,
                 'size' => strlen($content),
                 'sha256' => hash('sha256', $content),
                 'content' => $content,
@@ -42,14 +53,9 @@ class BackupStore
             ]
         );
 
-        return (int) $this->connection->lastInsertId();
+        return (string) $this->connection->lastInsertId();
     }
 
-    /**
-     * Backups without their content, newest first.
-     *
-     * @return list<StoredBackup>
-     */
     public function list(?int $deviceId = null): array
     {
         $query = $this->connection->createQueryBuilder()
@@ -65,23 +71,23 @@ class BackupStore
         return array_map(fn (array $row): StoredBackup => $this->toBackup($row), $query->fetchAllAssociative());
     }
 
-    public function get(int $id): ?StoredBackup
+    public function get(string $id): ?StoredBackup
     {
-        $row = $this->connection->fetchAssociative(sprintf('SELECT * FROM %s WHERE id = ?', Schema::DEVICE_BACKUPS), [$id]);
+        if (!ctype_digit($id)) {
+            return null;
+        }
+        $row = $this->connection->fetchAssociative(sprintf('SELECT * FROM %s WHERE id = ?', Schema::DEVICE_BACKUPS), [(int) $id]);
 
         return false === $row ? null : $this->toBackup($row, true);
     }
 
-    public function delete(int $id): void
+    public function delete(string $id): void
     {
-        $this->connection->delete(Schema::DEVICE_BACKUPS, ['id' => $id]);
+        if (ctype_digit($id)) {
+            $this->connection->delete(Schema::DEVICE_BACKUPS, ['id' => (int) $id]);
+        }
     }
 
-    /**
-     * Keeps the newest $keep backups of a device; 0 keeps all of them.
-     *
-     * @return int the number of backups removed
-     */
     public function prune(int $deviceId, int $keep): int
     {
         if ($keep <= 0) {
@@ -95,6 +101,11 @@ class BackupStore
         }
 
         return $removed;
+    }
+
+    public function clear(): void
+    {
+        $this->connection->executeStatement(sprintf('DELETE FROM %s', Schema::DEVICE_BACKUPS));
     }
 
     /**
@@ -112,7 +123,7 @@ class BackupStore
         }
 
         return new StoredBackup(
-            (int) $row['id'],
+            (string) $row['id'],
             (int) $row['device_id'],
             (string) $row['device_name'],
             new \DateTimeImmutable((string) $row['created_at'], new \DateTimeZone('UTC')),

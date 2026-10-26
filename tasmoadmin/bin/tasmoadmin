@@ -1,11 +1,17 @@
 #!/usr/bin/env php
 <?php
 
+use Doctrine\DBAL\Connection;
+use TasmoAdmin\Backup\BackupStorage;
+use TasmoAdmin\Backup\BackupStorageFactory;
+use TasmoAdmin\Backup\BackupStorageMigrator;
 use TasmoAdmin\Database\ConnectionFactory;
 use TasmoAdmin\Database\DatabaseExporter;
 use TasmoAdmin\Database\DatabaseUrl;
 use TasmoAdmin\Database\FileImporter;
 use TasmoAdmin\Database\Migrator;
+use TasmoAdmin\Database\Schema;
+use TasmoAdmin\Database\SnapshotStore;
 
 if (PHP_SAPI !== 'cli') {
     exit(1);
@@ -25,6 +31,12 @@ $usage = <<<'TXT'
       db:export <file>        Export devices, settings and backups to <file> (gzip JSON)
       db:import <file>        Replace everything in the database with the export in <file>
       db:copy <from> <to>     Copy everything from database URI <from> to database URI <to>
+      db:snapshot             Take a snapshot of the settings and devices
+      db:snapshots            List the snapshots
+      db:snapshot-export <id|latest> <file>
+                              Write a snapshot to <file> (same format as db:export, without device backups)
+      backups:storage <database|filesystem>
+                              Move the device backups to the database or to the data folder
 
     Without --uri the database comes from TASMO_DB_URI / TASMO_DB_URI_FILE, or the SQLite
     file in the data directory. db:import and db:copy refuse to overwrite a database that
@@ -69,6 +81,12 @@ $hasData = static function (DatabaseExporter $exporter): bool {
     return false;
 };
 
+$backupStorage = static function (Connection $connection) use ($dataDir): BackupStorage {
+    $setting = $connection->fetchOne(sprintf('SELECT value FROM %s WHERE name = ?', Schema::SETTINGS), [BackupStorageFactory::SETTING]);
+
+    return (new BackupStorageFactory($connection, $dataDir))->create(false === $setting ? null : (string) $setting);
+};
+
 $printCounts = static function (array $counts): void {
     foreach ($counts as $table => $count) {
         fwrite(STDOUT, sprintf("  %-20s %d\n", $table, $count));
@@ -104,7 +122,7 @@ try {
                 throw new InvalidArgumentException('db:export needs a file name.');
             }
             [$url, $connection] = $open($options['uri']);
-            $exporter = new DatabaseExporter($connection);
+            $exporter = new DatabaseExporter($connection, $backupStorage($connection));
             if (false === file_put_contents($file, $exporter->export())) {
                 throw new RuntimeException('Could not write '.$file);
             }
@@ -119,10 +137,11 @@ try {
                 throw new InvalidArgumentException('db:import needs a readable export file.');
             }
             [$url, $connection] = $open($options['uri']);
-            $exporter = new DatabaseExporter($connection);
+            $exporter = new DatabaseExporter($connection, $backupStorage($connection));
             if ($hasData($exporter) && !$options['force']) {
                 throw new RuntimeException($url->redacted().' already has data; add --force to replace it.');
             }
+            (new SnapshotStore($connection))->create(SnapshotStore::REASON_BEFORE_IMPORT);
             $counts = $exporter->import((string) file_get_contents($file));
             fwrite(STDOUT, sprintf("Imported %s into %s:\n", $file, $url->redacted()));
             $printCounts($counts);
@@ -135,13 +154,61 @@ try {
             }
             [$fromUrl, $from] = $open($positional[0]);
             [$toUrl, $to] = $open($positional[1]);
-            $target = new DatabaseExporter($to);
+            $target = new DatabaseExporter($to, $backupStorage($to));
             if ($hasData($target) && !$options['force']) {
                 throw new RuntimeException($toUrl->redacted().' already has data; add --force to replace it.');
             }
-            $counts = $target->import((new DatabaseExporter($from))->export());
+            $counts = $target->import((new DatabaseExporter($from, $backupStorage($from)))->export());
             fwrite(STDOUT, sprintf("Copied %s to %s:\n", $fromUrl->redacted(), $toUrl->redacted()));
             $printCounts($counts);
+
+            break;
+
+        case 'db:snapshot':
+            [$url, $connection] = $open($options['uri']);
+            $id = (new SnapshotStore($connection))->create(SnapshotStore::REASON_MANUAL);
+            fwrite(STDOUT, sprintf("Snapshot %d taken in %s.\n", $id, $url->redacted()));
+
+            break;
+
+        case 'db:snapshots':
+            [, $connection] = $open($options['uri']);
+            foreach ((new SnapshotStore($connection))->list() as $snapshot) {
+                fwrite(STDOUT, sprintf("  %5d  %s UTC  %-15s %3d devices  %3d settings  %6d bytes\n", $snapshot->id, $snapshot->createdAt->format('Y-m-d H:i:s'), $snapshot->reason, $snapshot->devices, $snapshot->settings, $snapshot->size));
+            }
+
+            break;
+
+        case 'db:snapshot-export':
+            if (2 !== count($positional)) {
+                throw new InvalidArgumentException('db:snapshot-export needs a snapshot id (or latest) and a file name.');
+            }
+            [, $connection] = $open($options['uri']);
+            $snapshots = new SnapshotStore($connection);
+            $snapshot = 'latest' === $positional[0] ? $snapshots->latest() : $snapshots->get((int) $positional[0]);
+            if (null === $snapshot || null === $snapshot->content) {
+                throw new RuntimeException('No such snapshot: '.$positional[0]);
+            }
+            if (false === file_put_contents($positional[1], $snapshot->content)) {
+                throw new RuntimeException('Could not write '.$positional[1]);
+            }
+            fwrite(STDOUT, sprintf("Snapshot %d (%s UTC) written to %s.\n", $snapshot->id, $snapshot->createdAt->format('Y-m-d H:i:s'), $positional[1]));
+
+            break;
+
+        case 'backups:storage':
+            $target = $positional[0] ?? '';
+            if (!in_array($target, [BackupStorage::DATABASE, BackupStorage::FILESYSTEM], true)) {
+                throw new InvalidArgumentException('backups:storage needs "database" or "filesystem".');
+            }
+            [, $connection] = $open($options['uri']);
+            $current = $backupStorage($connection);
+            $moved = (new BackupStorageMigrator())->migrate($current, (new BackupStorageFactory($connection, $dataDir))->create($target));
+            $connection->transactional(static function (Connection $connection) use ($target): void {
+                $connection->delete(Schema::SETTINGS, ['name' => BackupStorageFactory::SETTING]);
+                $connection->insert(Schema::SETTINGS, ['name' => BackupStorageFactory::SETTING, 'value' => $target]);
+            });
+            fwrite(STDOUT, sprintf("Device backups are now stored in the %s (%d moved).\n", $target, $moved));
 
             break;
 
