@@ -42,6 +42,11 @@ class HeaderDevicesNavigationTest extends TestCase
             {
                 return 4;
             }
+
+            public function readAll(): array
+            {
+                return [];
+            }
         };
 
         $container = new class {
