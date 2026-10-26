@@ -25,12 +25,15 @@ $viewHelper = $container->get(ViewHelper::class);
 		-->
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
 
-        <link rel="apple-touch-icon" sizes="180x180" href="<?php echo _RESOURCESURL_; ?>img/favicons/apple-touch-icon.png">
+        <link rel="icon" href="<?php echo _RESOURCESURL_; ?>img/favicons/favicon.ico" sizes="48x48">
+        <link rel="icon" type="image/svg+xml" href="<?php echo _RESOURCESURL_; ?>img/favicons/favicon.svg">
         <link rel="icon" type="image/png" sizes="32x32" href="<?php echo _RESOURCESURL_; ?>img/favicons/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="<?php echo _RESOURCESURL_; ?>img/favicons/favicon-16x16.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="<?php echo _RESOURCESURL_; ?>img/favicons/apple-touch-icon.png">
         <link rel="manifest" href="<?php echo _RESOURCESURL_; ?>img/favicons/site.webmanifest">
-		<meta name="msapplication-TileColor" content="#ffffff">
-		<meta name="msapplication-TileImage" content="<?php echo _RESOURCESURL_; ?>img/favicons/ms-icon-144x144.png">
+		<meta name="msapplication-config" content="<?php echo _RESOURCESURL_; ?>img/favicons/browserconfig.xml">
+		<meta name="msapplication-TileColor" content="#282c34">
+		<meta name="msapplication-TileImage" content="<?php echo _RESOURCESURL_; ?>img/favicons/mstile-144x144.png">
 		<meta name="theme-color" content="#ffffff">
 
 

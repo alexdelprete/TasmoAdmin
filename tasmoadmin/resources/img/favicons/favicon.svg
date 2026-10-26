@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0.8 1.1 38.7 33.9">
+  <style>
+    g { stroke: #000000; } circle { fill: #000000; }
+    @media (prefers-color-scheme: dark) { g { stroke: #ffffff; } circle { fill: #ffffff; } }
+  </style>
+  <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.8 17.3 19.9 4.35 36.5 17.2"/>
+    <path d="M31.6 18.6V31.7h-7"/>
+    <path d="M9.1 18.7V31.7h10.8v-5.4"/>
+    <path d="M16.2 21.05c0 0 3.7-3.8 7.55 0"/>
+    <path d="M12.6 17.6c0 0 7.37-7.1 14.7 0.2"/>
+    <circle cx="19.9" cy="25.8" r="2" stroke="none"/>
+  </g>
+</svg>
