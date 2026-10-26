@@ -47,6 +47,7 @@ onI18nReady(function () {
   initIpSorting();
   initCellDataSorting("rssi", ".rssi span", "data-sort-number", true);
   initCellDataSorting("version", ".version span", "data-sort-text");
+  initCellDataSorting("bssid", ".bssid span", "data-sort-text");
   initCellDataSorting("runtime", ".runtime span", "data-runtime-seconds", true);
   initCellDataSorting(
     "energyPower",
@@ -1037,14 +1038,23 @@ function updateBssidCell(row, data) {
 
   const bssid = data.hasWifi && data.wifi ? data.wifi.bssid : undefined;
   if (!bssid) {
-    cell.text("-").removeAttr("title").removeClass("bssid-named");
+    cell.text("-").removeAttr("data-sort-text").removeClass("bssid-named");
     return;
   }
 
   const name = getBssidName(bssid);
+  if (name) {
+    cell
+      .empty()
+      .append(
+        $("<b>", { class: "bssid-name" }).text(name),
+        $("<small>", { class: "bssid-mac" }).text(bssid),
+      );
+  } else {
+    cell.text(bssid);
+  }
   cell
-    .text(name || bssid)
-    .attr("title", name ? bssid : "")
+    .attr("data-sort-text", (name || bssid).toLowerCase())
     .toggleClass("bssid-named", name !== "");
 
   const keywords = String($(row).data("keywords") || "");
@@ -1075,9 +1085,11 @@ function buildWifiMarkup(wifi, summary) {
     "aria-hidden": "true",
     "data-level": getWifiLevel(wifi.rssi),
   }).append("<i></i><i></i><i></i><i></i>");
-  const text = $("<b>", { class: "wifi-text" }).append(
+  const signal = $("<i>", { class: "wifi-signal" }).append(
+    bars,
     $("<b>", { class: "wifi-pct" }).text(summary),
   );
+  const text = $("<b>", { class: "wifi-text" });
   if (wifi.ssid || wifi.channel) {
     const meta = $("<small>", { class: "wifi-meta" });
     if (wifi.ssid) {
@@ -1088,7 +1100,7 @@ function buildWifiMarkup(wifi, summary) {
     }
     text.append(meta);
   }
-  return [bars, text];
+  return [signal, text];
 }
 
 function updateRow(row, data, device_status) {
