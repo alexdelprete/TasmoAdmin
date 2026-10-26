@@ -3,9 +3,10 @@
 namespace TasmoAdmin\Database;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
-use Doctrine\DBAL\Types\Types;
+use TasmoAdmin\Backup\BackupStorage;
+use TasmoAdmin\Backup\DatabaseBackupStore;
+use TasmoAdmin\Backup\StoredBackup;
 
 /**
  * Exports all ta_ tables to one gzip-compressed JSON document and imports it
@@ -23,20 +24,36 @@ class DatabaseExporter
     /**
      * Tables in insert order (parents before children).
      */
-    private const TABLES = [Schema::SETTINGS, Schema::DEVICES, Schema::DEVICE_CHANNELS, Schema::DEVICE_BACKUPS];
+    public const TABLES = [Schema::SETTINGS, Schema::DEVICES, Schema::DEVICE_CHANNELS, Schema::DEVICE_BACKUPS];
+
+    /**
+     * What a snapshot of TasmoAdmin's own data contains (no device backups).
+     */
+    public const DATA_TABLES = [Schema::SETTINGS, Schema::DEVICES, Schema::DEVICE_CHANNELS];
+
+    /**
+     * Settings that describe this installation rather than its data: an
+     * import or snapshot restore keeps their current values.
+     */
+    private const KEPT_SETTINGS = ['backup_storage'];
 
     private const ORDER_BY = [
         Schema::SETTINGS => 'name',
         Schema::DEVICES => 'id',
         Schema::DEVICE_CHANNELS => 'device_id, channel',
-        Schema::DEVICE_BACKUPS => 'id',
     ];
 
     private Connection $connection;
 
-    public function __construct(Connection $connection)
+    private BackupStorage $backups;
+
+    /**
+     * @param null|BackupStorage $backups where device backups are read from and written to (the database by default)
+     */
+    public function __construct(Connection $connection, ?BackupStorage $backups = null)
     {
         $this->connection = $connection;
+        $this->backups = $backups ?? new DatabaseBackupStore($connection);
     }
 
     /**
@@ -45,29 +62,32 @@ class DatabaseExporter
     public function counts(): array
     {
         $counts = [];
-        foreach (self::TABLES as $table) {
+        foreach (self::DATA_TABLES as $table) {
             $counts[$table] = (int) $this->connection->fetchOne(sprintf('SELECT COUNT(*) FROM %s', $table));
         }
+        $counts[Schema::DEVICE_BACKUPS] = count($this->backups->list());
 
         return $counts;
     }
 
-    public function export(): string
+    /**
+     * @param list<string> $only the tables to export, all of them by default
+     */
+    public function export(array $only = self::TABLES): string
     {
         $tables = [];
         foreach (self::TABLES as $table) {
-            $rows = [];
-            foreach ($this->connection->fetchAllAssociative(sprintf('SELECT * FROM %s ORDER BY %s', $table, self::ORDER_BY[$table])) as $row) {
-                if (Schema::DEVICE_BACKUPS === $table) {
-                    $content = $row['content'];
-                    if (is_resource($content)) {
-                        $content = (string) stream_get_contents($content);
-                    }
-                    $row['content'] = base64_encode((string) $content);
-                }
-                $rows[] = $row;
+            if (!in_array($table, $only, true)) {
+                continue;
             }
-            $tables[$table] = $rows;
+
+            if (Schema::DEVICE_BACKUPS === $table) {
+                $tables[$table] = $this->exportBackups();
+
+                continue;
+            }
+
+            $tables[$table] = $this->connection->fetchAllAssociative(sprintf('SELECT * FROM %s ORDER BY %s', $table, self::ORDER_BY[$table]));
         }
 
         $document = [
@@ -82,33 +102,85 @@ class DatabaseExporter
     }
 
     /**
-     * Replaces everything in the ta_ tables with the export.
+     * Replaces the data of every table contained in the export; tables the
+     * export does not contain (e.g. device backups in a snapshot) are kept.
      *
      * @return array<string, int> rows imported per table
      */
     public function import(string $export): array
     {
         $document = $this->decode($export);
+        $present = array_values(array_filter(self::TABLES, static fn (string $table): bool => array_key_exists($table, $document['tables'])));
 
         $counts = [];
-        $this->connection->transactional(function (Connection $connection) use ($document, &$counts): void {
-            foreach (array_reverse(self::TABLES) as $table) {
-                $connection->executeStatement(sprintf('DELETE FROM %s', $table));
+        $this->connection->transactional(function (Connection $connection) use ($document, $present, &$counts): void {
+            $keptSettings = [];
+            if (in_array(Schema::SETTINGS, $present, true)) {
+                foreach (self::KEPT_SETTINGS as $name) {
+                    $value = $connection->fetchOne(sprintf('SELECT value FROM %s WHERE name = ?', Schema::SETTINGS), [$name]);
+                    if (false !== $value) {
+                        $keptSettings[$name] = (string) $value;
+                    }
+                }
             }
 
-            foreach (self::TABLES as $table) {
-                $rows = $document['tables'][$table] ?? [];
+            foreach (array_reverse($present) as $table) {
+                if (Schema::DEVICE_BACKUPS === $table) {
+                    $this->backups->clear();
+                } else {
+                    $connection->executeStatement(sprintf('DELETE FROM %s', $table));
+                }
+            }
+
+            foreach ($present as $table) {
+                $rows = $document['tables'][$table];
                 foreach ($rows as $row) {
-                    $connection->insert($table, ...$this->prepareRow($table, $row));
+                    if (Schema::DEVICE_BACKUPS === $table) {
+                        $this->backups->store($this->toBackup($row));
+                    } else {
+                        $connection->insert($table, $row);
+                    }
                 }
                 $counts[$table] = count($rows);
             }
 
-            $this->resetSequence($connection, Schema::DEVICE_BACKUPS);
-            $this->resetSequence($connection, Schema::DEVICES);
+            foreach ($keptSettings as $name => $value) {
+                $connection->delete(Schema::SETTINGS, ['name' => $name]);
+                $connection->insert(Schema::SETTINGS, ['name' => $name, 'value' => $value]);
+            }
+
+            if (in_array(Schema::DEVICES, $present, true)) {
+                $this->resetSequence($connection, Schema::DEVICES);
+            }
         });
 
         return $counts;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function exportBackups(): array
+    {
+        $rows = [];
+        foreach (array_reverse($this->backups->list()) as $summary) {
+            $backup = $this->backups->get($summary->id);
+            if (null === $backup) {
+                continue;
+            }
+            $rows[] = [
+                'device_id' => $backup->deviceId,
+                'device_name' => $backup->deviceName,
+                'created_at' => $backup->createdAt->format('Y-m-d H:i:s'),
+                'firmware' => $backup->firmware,
+                'filename' => $backup->filename,
+                'size' => $backup->size,
+                'sha256' => $backup->sha256,
+                'content' => base64_encode((string) $backup->content),
+            ];
+        }
+
+        return $rows;
     }
 
     /**
@@ -145,24 +217,22 @@ class DatabaseExporter
 
     /**
      * @param array<string, mixed> $row
-     *
-     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
      */
-    private function prepareRow(string $table, array $row): array
+    private function toBackup(array $row): StoredBackup
     {
-        $types = [];
-        if (Schema::DEVICE_BACKUPS === $table) {
-            $content = base64_decode((string) ($row['content'] ?? ''), true);
-            if (false === $content) {
-                throw new \InvalidArgumentException('A backup in the export has invalid content.');
-            }
-            $row['content'] = $content;
-            $types['content'] = ParameterType::LARGE_OBJECT;
-            $row['created_at'] = new \DateTimeImmutable((string) $row['created_at'], new \DateTimeZone('UTC'));
-            $types['created_at'] = Types::DATETIME_IMMUTABLE;
+        $content = base64_decode((string) ($row['content'] ?? ''), true);
+        if (false === $content) {
+            throw new \InvalidArgumentException('A backup in the export has invalid content.');
         }
 
-        return [$row, $types];
+        return StoredBackup::create(
+            (int) ($row['device_id'] ?? 0),
+            (string) ($row['device_name'] ?? ''),
+            (string) ($row['filename'] ?? 'backup.dmp'),
+            $content,
+            (string) ($row['firmware'] ?? ''),
+            new \DateTimeImmutable((string) ($row['created_at'] ?? 'now'), new \DateTimeZone('UTC'))
+        );
     }
 
     private function resetSequence(Connection $connection, string $table): void

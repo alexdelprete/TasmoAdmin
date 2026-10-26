@@ -2,7 +2,7 @@
 
 use Selective\Container\Container;
 use TasmoAdmin\Backup\BackupHelper;
-use TasmoAdmin\Backup\BackupStore;
+use TasmoAdmin\Backup\BackupStorageFactory;
 use TasmoAdmin\Config;
 use TasmoAdmin\DevicePasswordCipher;
 use TasmoAdmin\DevicePasswordKeyProvider;
@@ -69,7 +69,7 @@ $container->set(BackupHelper::class, new BackupHelper(
     _BASEURL_,
     null,
     false,
-    null === $storageBackend->getConnection() ? null : new BackupStore($storageBackend->getConnection())
+    (new BackupStorageFactory($storageBackend->getConnection(), _DATADIR_))->create($container->get(Config::class)->read(BackupStorageFactory::SETTING))
 ));
 $container->set(ViewHelper::class, new ViewHelper($container->get(Config::class)));
 $container->set(RedirectHelper::class, new RedirectHelper(_BASEURL_));

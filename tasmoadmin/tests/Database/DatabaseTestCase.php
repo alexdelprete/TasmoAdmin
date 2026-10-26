@@ -42,7 +42,7 @@ abstract class DatabaseTestCase extends TestCase
     private function dropTables(Connection $connection): void
     {
         $schemaManager = $connection->createSchemaManager();
-        foreach ([Schema::DEVICE_CHANNELS, Schema::DEVICE_BACKUPS, Schema::DEVICES, Schema::SETTINGS, Schema::META] as $table) {
+        foreach ([Schema::DEVICE_CHANNELS, Schema::DEVICE_BACKUPS, Schema::SNAPSHOTS, Schema::DEVICES, Schema::SETTINGS, Schema::META] as $table) {
             if ($schemaManager->tablesExist([$table])) {
                 $schemaManager->dropTable($table);
             }

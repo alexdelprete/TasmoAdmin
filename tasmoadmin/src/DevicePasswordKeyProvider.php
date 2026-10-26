@@ -7,6 +7,7 @@ use Symfony\Component\Filesystem\Filesystem;
 class DevicePasswordKeyProvider
 {
     public const ENV_NAME = 'TASMO_DEVICE_PASSWORD_KEY';
+    public const ENV_FILE_NAME = 'TASMO_DEVICE_PASSWORD_KEY_FILE';
     public const KEY_LENGTH = 32;
     public const SIDECAR_FILENAME = '.device-password.key';
 
@@ -35,11 +36,10 @@ class DevicePasswordKeyProvider
             $sidecarKey = $this->decodeKey($sidecarEncodedKey, 'sidecar');
         }
 
-        $envEncodedKey = getenv(self::ENV_NAME);
+        [$envEncodedKey, $envSource] = $this->readEnvironmentKey();
         $envKey = null;
-        if (false !== $envEncodedKey && '' !== trim($envEncodedKey)) {
-            $envEncodedKey = trim($envEncodedKey);
-            $envKey = $this->decodeKey($envEncodedKey, 'environment');
+        if (null !== $envEncodedKey) {
+            $envKey = $this->decodeKey($envEncodedKey, $envSource);
         }
 
         if (null !== $sidecarKey) {
@@ -47,7 +47,7 @@ class DevicePasswordKeyProvider
                 throw new DeviceCredentialException(sprintf(
                     'Device password key mismatch between %s and %s.',
                     $this->getKeyFilePath(),
-                    self::ENV_NAME
+                    $envSource
                 ));
             }
 
@@ -64,6 +64,36 @@ class DevicePasswordKeyProvider
     public function getKeyFilePath(): string
     {
         return $this->dataDir.self::SIDECAR_FILENAME;
+    }
+
+    /**
+     * The key from TASMO_DEVICE_PASSWORD_KEY, or from the file named by
+     * TASMO_DEVICE_PASSWORD_KEY_FILE (Docker secrets).
+     *
+     * @return array{0: ?string, 1: string} the encoded key (null when neither is set) and its source
+     */
+    private function readEnvironmentKey(): array
+    {
+        $value = trim((string) getenv(self::ENV_NAME));
+        $file = trim((string) getenv(self::ENV_FILE_NAME));
+
+        if ('' === $file) {
+            return ['' === $value ? null : $value, self::ENV_NAME];
+        }
+
+        if (!is_readable($file)) {
+            throw new DeviceCredentialException(sprintf('%s points to %s, which cannot be read.', self::ENV_FILE_NAME, $file));
+        }
+
+        $fileValue = trim((string) file_get_contents($file));
+        if ('' === $fileValue) {
+            throw new DeviceCredentialException(sprintf('%s points to %s, which is empty.', self::ENV_FILE_NAME, $file));
+        }
+        if ('' !== $value && $value !== $fileValue) {
+            throw new DeviceCredentialException(sprintf('%s and %s are both set but contain different keys.', self::ENV_NAME, self::ENV_FILE_NAME));
+        }
+
+        return [$fileValue, self::ENV_FILE_NAME];
     }
 
     private function decodeKey(string $encodedKey, string $source): string

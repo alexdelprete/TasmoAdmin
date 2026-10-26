@@ -66,6 +66,19 @@ class DatabaseUrlTest extends TestCase
         }
     }
 
+    public function testDifferentUriAndUriFileAreRejected(): void
+    {
+        $file = tempnam(sys_get_temp_dir(), 'uri');
+        file_put_contents($file, 'postgres://u:p@h/db');
+
+        try {
+            $this->expectException(DatabaseConfigurationException::class);
+            DatabaseUrl::fromEnvironment('/data/', [DatabaseUrl::ENV_URI => 'mysql://u:p@h/db', DatabaseUrl::ENV_URI_FILE => $file]);
+        } finally {
+            unlink($file);
+        }
+    }
+
     public function testUnsupportedSchemeIsRejected(): void
     {
         $this->expectException(DatabaseConfigurationException::class);
