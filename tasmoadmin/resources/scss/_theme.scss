@@ -1810,3 +1810,23 @@ body.nightmode {
 #{$ta} .devices-page #device-list > thead > tr > th[data-column-id="actions"] {
   padding-right: 9px !important;
 }
+
+// Lock button: same 36 px square as the Add device button (its w-100 class
+// otherwise stretches it to the width of its column)
+
+#{$ta} .devices-page .devices-protection-toggle .btn {
+  width: 36px !important;
+  min-width: 36px;
+}
+
+#{$ta} .devices-page .devices-toolbar-lock-col {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0 !important;
+}
+
+#{$ta} .devices-page .devices-protection-toggle {
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0;
+}
