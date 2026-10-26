@@ -1775,3 +1775,37 @@ body.nightmode {
   color: var(--ta-text-strong);
   font-weight: 500;
 }
+
+// Device list scrollbar: 6 px, centred between the last row icon and the
+// panel border (the actions cell gets the same right padding as the panel)
+
+#{$ta} .devices-page .devices-table-panel .table-responsive::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+#{$ta} .devices-page .devices-table-panel .table-responsive::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background-color: var(--ta-border-strong);
+}
+
+#{$ta} .devices-page .devices-table-panel .table-responsive::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ta-muted);
+}
+
+#{$ta} .devices-page .devices-table-panel .table-responsive::-webkit-scrollbar-track,
+#{$ta} .devices-page .devices-table-panel .table-responsive::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  #{$ta} .devices-page .devices-table-panel .table-responsive {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ta-border-strong) transparent;
+  }
+}
+
+#{$ta} .devices-page #device-list > tbody > tr > td.actions,
+#{$ta} .devices-page #device-list > thead > tr > th[data-column-id="actions"] {
+  padding-right: 16px !important;
+}
