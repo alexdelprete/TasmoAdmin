@@ -2,11 +2,11 @@
 
 namespace TasmoAdmin;
 
-use Symfony\Component\Filesystem\Filesystem;
+use TasmoAdmin\Storage\CsvDeviceStorage;
+use TasmoAdmin\Storage\DeviceStorage;
 
 class DeviceRepository
 {
-    private const CSV_ESCAPE = '\\';
     private const UPDATE_FIELD_PROPERTY_MAP = [
         'device_all_off' => 'deviceAllOff',
         'device_protect_on' => 'deviceProtectionOn',
@@ -14,11 +14,7 @@ class DeviceRepository
         'device_hide_from_startpage' => 'deviceHideFromStartpage',
     ];
 
-    private string $file;
-
-    private string $tmpDir;
-
-    private Filesystem $filesystem;
+    private DeviceStorage $storage;
 
     private DevicePasswordCipher $devicePasswordCipher;
 
@@ -43,18 +39,18 @@ class DeviceRepository
         'device_hide_from_startpage',
     ];
 
+    /**
+     * @param DeviceStorage|string $storage a storage, or the path of a devices.csv file
+     */
     public function __construct(
-        string $file,
+        DeviceStorage|string $storage,
         string $tmpDir,
         DevicePasswordCipher $devicePasswordCipher,
         bool $defaultConfirmDeviceToggles = false
     ) {
-        $this->file = $file;
-        $this->tmpDir = $tmpDir;
-        $this->filesystem = new Filesystem();
+        $this->storage = is_string($storage) ? new CsvDeviceStorage($storage, $tmpDir) : $storage;
         $this->devicePasswordCipher = $devicePasswordCipher;
         $this->defaultConfirmDeviceToggles = $defaultConfirmDeviceToggles;
-        $this->createFile();
     }
 
     public function addDevice(array $request): void
@@ -66,7 +62,7 @@ class DeviceRepository
 
     public function addDevices(array $devices, string $deviceUsername, string $devicePassword): void
     {
-        $handle = fopen($this->file, 'a');
+        $rows = [];
         $nextId = $this->getNextId();
         foreach ($devices as $device) {
             $deviceHolder = [];
@@ -87,10 +83,10 @@ class DeviceRepository
             $deviceHolder[14] = trim((string) ($device['device_mqtt_topic'] ?? ''));
             $deviceHolder[15] = $device['device_hide_from_startpage'] ?? 0;
 
-            fputcsv($handle, $deviceHolder, escape: self::CSV_ESCAPE);
+            $rows[] = $deviceHolder;
         }
 
-        fclose($handle);
+        $this->storage->appendRows($rows);
     }
 
     public function getDeviceById(int $id): ?Device
@@ -98,8 +94,7 @@ class DeviceRepository
         $device = null;
         $storageRows = [];
         $needsRewrite = false;
-        $file = $this->openInputFile();
-        while (($line = fgetcsv($file, escape: self::CSV_ESCAPE)) !== false) {
+        foreach ($this->storage->loadRows() as $line) {
             [$storageRow, $rowNeedsRewrite] = $this->prepareStorageRow($line);
             $storageRows[] = $storageRow;
             $needsRewrite = $needsRewrite || $rowNeedsRewrite;
@@ -108,7 +103,6 @@ class DeviceRepository
                 $device = $this->createDeviceObject($storageRow);
             }
         }
-        fclose($file);
 
         if ($needsRewrite) {
             $this->rewriteRows($storageRows);
@@ -125,14 +119,12 @@ class DeviceRepository
         $devices = [];
         $storageRows = [];
         $needsRewrite = false;
-        $file = $this->openInputFile();
-        while (($line = fgetcsv($file, escape: self::CSV_ESCAPE)) !== false) {
+        foreach ($this->storage->loadRows() as $line) {
             [$storageRow, $rowNeedsRewrite] = $this->prepareStorageRow($line);
             $storageRows[] = $storageRow;
             $needsRewrite = $needsRewrite || $rowNeedsRewrite;
             $devices[] = $this->createDeviceObject($storageRow);
         }
-        fclose($file);
 
         if ($needsRewrite) {
             $this->rewriteRows($storageRows);
@@ -211,38 +203,26 @@ class DeviceRepository
     public function setDeviceConfirmToggleForAll(bool $enabled): void
     {
         $storageRows = [];
-        $input = $this->openInputFile();
-        while (($data = fgetcsv($input, escape: self::CSV_ESCAPE)) !== false) {
+        foreach ($this->storage->loadRows() as $data) {
             [$storageRow] = $this->prepareStorageRow($data);
             $storageRow[13] = $enabled ? 1 : 0;
             $storageRows[] = $storageRow;
         }
-        fclose($input);
 
         $this->rewriteRows($storageRows);
     }
 
     public function removeDevices(array $ids): void
     {
-        $tempFile = $this->filesystem->tempnam($this->tmpDir, 'tmp');
-
-        if (!$input = fopen($this->file, 'r')) {
-            exit(__('ERROR_CANNOT_READ_CSV_FILE', 'DEVICE_ACTIONS', ['csvFilePath' => _CSVFILE_]));
-        }
-        if (!$output = fopen($tempFile, 'w')) {
-            exit(__('ERROR_CANNOT_CREATE_TMP_FILE', 'DEVICE_ACTIONS', ['tmpFilePath' => $tempFile]));
-        }
-
-        while (($data = fgetcsv($input, escape: self::CSV_ESCAPE)) !== false) {
+        $rows = [];
+        foreach ($this->storage->loadRows() as $data) {
             if (in_array($data[0], $ids)) {
                 continue;
             }
-            fputcsv($output, $data, escape: self::CSV_ESCAPE);
+            $rows[] = $data;
         }
 
-        fclose($input);
-        fclose($output);
-        $this->filesystem->rename($tempFile, $this->file, true);
+        $this->storage->saveRows($rows);
     }
 
     public function updateDevice(Device $device): ?Device
@@ -271,20 +251,15 @@ class DeviceRepository
             $deviceArr[$key] = trim($field);
         }
 
-        $tempFile = $this->filesystem->tempnam($this->tmpDir, 'tmp');
-        $input = $this->openInputFile();
-        $output = $this->openOutputFile($tempFile);
-
-        while (($data = fgetcsv($input, escape: self::CSV_ESCAPE)) !== false) {
+        $rows = [];
+        foreach ($this->storage->loadRows() as $data) {
             if ($data[0] == $deviceArr[0]) {
                 $data = $deviceArr;
             }
-            fputcsv($output, $data, escape: self::CSV_ESCAPE);
+            $rows[] = $data;
         }
 
-        fclose($input);
-        fclose($output);
-        $this->filesystem->rename($tempFile, $this->file, true);
+        $this->storage->saveRows($rows);
 
         return $this->createDeviceObject($deviceArr);
     }
@@ -347,13 +322,6 @@ class DeviceRepository
         return $id + 1;
     }
 
-    private function createFile(): void
-    {
-        if (!$this->filesystem->exists($this->file)) {
-            $this->filesystem->touch($this->file);
-        }
-    }
-
     private function encodePasswordForStorage(string $password): string
     {
         if ('' === $password) {
@@ -365,36 +333,6 @@ class DeviceRepository
 
     private function rewriteRows(array $rows): void
     {
-        $tempFile = $this->filesystem->tempnam($this->tmpDir, 'tmp');
-        $output = $this->openOutputFile($tempFile);
-
-        foreach ($rows as $row) {
-            fputcsv($output, $row, escape: self::CSV_ESCAPE);
-        }
-
-        fclose($output);
-        $this->filesystem->rename($tempFile, $this->file, true);
-    }
-
-    private function openInputFile()
-    {
-        $input = fopen($this->file, 'r');
-        if (false === $input) {
-            $csvFilePath = defined('_CSVFILE_') ? _CSVFILE_ : $this->file;
-
-            exit(__('ERROR_CANNOT_READ_CSV_FILE', 'DEVICE_ACTIONS', ['csvFilePath' => $csvFilePath]));
-        }
-
-        return $input;
-    }
-
-    private function openOutputFile(string $path)
-    {
-        $output = fopen($path, 'w');
-        if (false === $output) {
-            exit(__('ERROR_CANNOT_CREATE_TMP_FILE', 'DEVICE_ACTIONS', ['tmpFilePath' => $path]));
-        }
-
-        return $output;
+        $this->storage->saveRows($rows);
     }
 }

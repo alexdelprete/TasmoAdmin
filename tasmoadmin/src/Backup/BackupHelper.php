@@ -5,6 +5,7 @@ namespace TasmoAdmin\Backup;
 use GuzzleHttp\Exception\ConnectException;
 use Symfony\Component\Filesystem\Filesystem;
 use TasmoAdmin\Config;
+use TasmoAdmin\Device;
 use TasmoAdmin\DeviceRepository;
 use TasmoAdmin\Sonoff;
 
@@ -25,6 +26,8 @@ class BackupHelper
 
     private bool $allowNonUploadedFiles;
 
+    private ?BackupStore $store;
+
     public function __construct(
         DeviceRepository $deviceRepository,
         Sonoff $sonoff,
@@ -32,7 +35,8 @@ class BackupHelper
         ?Config $config = null,
         string $baseUrl = '',
         ?string $restorePath = null,
-        bool $allowNonUploadedFiles = false
+        bool $allowNonUploadedFiles = false,
+        ?BackupStore $store = null
     ) {
         $this->deviceRepository = $deviceRepository;
         $this->sonoff = $sonoff;
@@ -42,6 +46,12 @@ class BackupHelper
         $this->baseUrl = '' === $baseUrl ? '/' : $baseUrl;
         $this->restorePath = $restorePath ?? dirname(rtrim($backupPath, '/')).'/restore/';
         $this->allowNonUploadedFiles = $allowNonUploadedFiles;
+        $this->store = $store;
+    }
+
+    public function getStore(): ?BackupStore
+    {
+        return $this->store;
     }
 
     public function backup(array $deviceIds): BackupResults
@@ -56,7 +66,9 @@ class BackupHelper
             }
 
             try {
-                $files[] = $this->sonoff->backup($device, $this->backupPath);
+                $file = $this->sonoff->backup($device, $this->backupPath);
+                $files[] = $file;
+                $this->storeBackup($device, $file);
                 $results[] = new BackupResult($device, true);
             } catch (ConnectException $exception) {
                 // Failed to download
@@ -67,6 +79,63 @@ class BackupHelper
         $this->createZip($files);
 
         return new BackupResults($results);
+    }
+
+    /**
+     * Restores a backup from the history to the device it was taken from.
+     */
+    public function restoreStored(int $backupId): BackupResults
+    {
+        $backup = $this->store?->get($backupId);
+        if (null === $backup || null === $backup->content) {
+            throw new \RuntimeException(__('RESTORE_BACKUP_NOT_FOUND', 'BACKUP'));
+        }
+
+        $device = $this->deviceRepository->getDeviceById($backup->deviceId);
+        if (null === $device) {
+            throw new \RuntimeException(__('RESTORE_DEVICE_NOT_FOUND', 'BACKUP'));
+        }
+
+        $this->createCleanRestoreDir();
+        $restoreToken = bin2hex(random_bytes(12));
+        if (false === file_put_contents($this->restorePath.$restoreToken.'.dmp', $backup->content)) {
+            throw new \RuntimeException(__('RESTORE_FILE_COULD_NOT_SAVE', 'BACKUP'));
+        }
+
+        $result = $this->sonoff->restore($device, $this->getRestoreDownloadUrl($restoreToken));
+        $failureReason = $result->ERROR ?? $result->WARNING ?? '';
+        if ('' !== $failureReason) {
+            return new BackupResults([new BackupResult($device, false, (string) $failureReason)]);
+        }
+
+        return new BackupResults([new BackupResult($device, true)]);
+    }
+
+    /**
+     * A zip of the given stored backups, written to the backup folder.
+     *
+     * @param int[] $backupIds
+     */
+    public function createZipFromStore(array $backupIds): ?string
+    {
+        if (null === $this->store) {
+            return null;
+        }
+
+        $this->createCleanBackupDir();
+        $files = [];
+        foreach ($backupIds as $backupId) {
+            $backup = $this->store->get((int) $backupId);
+            if (null === $backup || null === $backup->content) {
+                continue;
+            }
+            $name = sprintf('%s-%s', $backup->createdAt->format('Ymd-His'), basename($backup->filename));
+            $path = $this->backupPath.$name;
+            file_put_contents($path, $backup->content);
+            $files[] = $path;
+        }
+
+        return [] === $files ? null : $this->createZip($files);
     }
 
     public function getBackupZipPath(): string
@@ -115,6 +184,23 @@ class BackupHelper
         if (null !== $restorePath) {
             @unlink($restorePath);
         }
+    }
+
+    private function storeBackup(Device $device, string $file): void
+    {
+        if (null === $this->store || !is_file($file)) {
+            return;
+        }
+
+        $content = (string) file_get_contents($file);
+        if ('' === $content) {
+            return;
+        }
+
+        $this->store->save($device, basename($file), $content, $this->sonoff->getFirmwareVersion($device));
+
+        $keep = null === $this->config ? 0 : (int) $this->config->read('backup_keep_count');
+        $this->store->prune($device->id, $keep);
     }
 
     private function createZip(array $files): string

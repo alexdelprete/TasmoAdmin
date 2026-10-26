@@ -1,12 +1,14 @@
 <?php
 
 use TasmoAdmin\Backup\BackupHelper;
+use TasmoAdmin\Database\DatabaseExporter;
 use TasmoAdmin\DevicePasswordKeyProvider;
 use TasmoAdmin\DeviceRepository;
 use TasmoAdmin\Helper\CacheCleanupHelper;
 use TasmoAdmin\Helper\FirmwareFolderHelper;
 use TasmoAdmin\Helper\SupportedLanguageHelper;
 use TasmoAdmin\Sonoff;
+use TasmoAdmin\Storage\StorageBackend;
 
 $Sonoff = $container->get(Sonoff::class);
 
@@ -74,6 +76,44 @@ if (isset($_GET['downloadBackup'])) {
     exit;
 }
 
+if (isset($_GET['downloadStoredBackup'])) {
+    $backup = $container->get(BackupHelper::class)->getStore()?->get((int) $_GET['downloadStoredBackup']);
+    if (null === $backup || null === $backup->content) {
+        http_response_code(404);
+
+        exit;
+    }
+
+    $filename = sprintf('%s-%s', $backup->createdAt->format('Ymd-His'), basename($backup->filename));
+    header('Content-type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="'.str_replace('"', '', $filename).'"');
+    header('Content-Length: '.strlen($backup->content));
+    ob_clean();
+    flush();
+    echo $backup->content;
+
+    exit;
+}
+
+if (isset($_GET['exportDatabase'])) {
+    $connection = $container->get(StorageBackend::class)->getConnection();
+    if (null === $connection) {
+        http_response_code(404);
+
+        exit;
+    }
+
+    $export = (new DatabaseExporter($connection))->export();
+    header('Content-type: application/gzip');
+    header('Content-Disposition: attachment; filename="tasmoadmin-'.date('Ymd-His').'.json.gz"');
+    header('Content-Length: '.strlen($export));
+    ob_clean();
+    flush();
+    echo $export;
+
+    exit;
+}
+
 if (isset($_GET['downloadRestore'])) {
     $backup = $container->get(BackupHelper::class);
     $restoreToken = (string) $_GET['downloadRestore'];
@@ -107,22 +147,12 @@ if (isset($_POST['clean'])) {
     }
 
     if (in_array('config', $what)) {
-        $files = glob(_DATADIR_.'/*'); // get all file names
-        foreach ($files as $file) { // iterate files
-            if (is_file($file) && (strpos($file, 'MyConfig.json') || strpos($file, 'MyConfig.php'))) {
-                @unlink($file);
-            } // delete file
-        }
+        $container->get(StorageBackend::class)->getConfigStorage()->clear();
         session_destroy();
     }
 
     if (in_array('devices', $what)) {
-        $files = glob(_DATADIR_.'/*'); // get all file names
-        foreach ($files as $file) { // iterate files
-            if (is_file($file) && strpos($file, 'devices.csv')) {
-                @unlink($file);
-            } // delete file
-        }
+        $container->get(StorageBackend::class)->getDeviceStorage()->clear();
 
         $devicePasswordKeyFile = _DATADIR_.DevicePasswordKeyProvider::SIDECAR_FILENAME;
         if (is_file($devicePasswordKeyFile)) {

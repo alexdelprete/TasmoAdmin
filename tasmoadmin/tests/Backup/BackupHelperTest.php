@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use TasmoAdmin\Backup\BackupHelper;
 use TasmoAdmin\Backup\BackupResult;
 use TasmoAdmin\Backup\BackupResults;
+use TasmoAdmin\Backup\BackupStore;
 use TasmoAdmin\Config;
 use TasmoAdmin\Device;
 use TasmoAdmin\DeviceRepository;
@@ -66,6 +67,36 @@ class BackupHelperTest extends TestCase
         self::assertTrue($zip->open($helper->getBackupZipPath()));
         self::assertSame('backup', $zip->getFromName('device-1.dmp'));
         $zip->close();
+    }
+
+    public function testBackupIsStoredWithFirmwareAndPruned(): void
+    {
+        $device = new Device(1, ['socket-1'], '192.168.1.10', '', '', 'img');
+
+        $repository = $this->createMock(DeviceRepository::class);
+        $repository->method('getDeviceById')->willReturn($device);
+
+        $backupDump = $this->tempDir.'/1-socket-1.dmp';
+        file_put_contents($backupDump, 'backup-content');
+
+        $sonoff = $this->createMock(Sonoff::class);
+        $sonoff->method('backup')->willReturn($backupDump);
+        $sonoff->expects(self::once())->method('getFirmwareVersion')->with($device)->willReturn('16.0.0');
+
+        $config = $this->createMock(Config::class);
+        $config->method('read')->willReturnMap([['backup_keep_count', '3']]);
+
+        $store = $this->createMock(BackupStore::class);
+        $store->expects(self::once())
+            ->method('save')
+            ->with($device, '1-socket-1.dmp', 'backup-content', '16.0.0')
+            ->willReturn(5)
+        ;
+        $store->expects(self::once())->method('prune')->with(1, 3);
+
+        $helper = new BackupHelper($repository, $sonoff, $this->backupPath, $config, '/', null, false, $store);
+
+        self::assertTrue($helper->backup([1])->successful());
     }
 
     public function testBackupCollectsConnectionFailures(): void

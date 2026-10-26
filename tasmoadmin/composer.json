@@ -11,6 +11,7 @@
         "ext-zip": "*",
         "ext-zlib": "*",
         "ext-dom": "*",
+        "ext-pdo": "*",
         "philipp15b/php-i18n": "^4.0",
         "guzzlehttp/guzzle": "^7.0",
         "symfony/filesystem": "^7.4",
@@ -23,7 +24,8 @@
         "symfony/http-client": "^7.4",
         "symfony/css-selector": "^7.4",
         "league/commonmark": "^2.6",
-        "php-mqtt/client": "^2.3"
+        "php-mqtt/client": "^2.3",
+        "doctrine/dbal": "^4.5"
     },
     "autoload": {
         "psr-4": {

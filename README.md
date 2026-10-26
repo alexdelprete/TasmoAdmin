@@ -89,6 +89,18 @@ Some environment variables are configured to allow easier customisation of the a
 - `NO_AUTH` - Set to `true` to bypass the built-in login when authentication is handled externally
 - `TASMO_DEVICE_PASSWORD_KEY` - Base64-encoded 32-byte secret for device password encryption at rest
 - `TASMO_ALLOW_CROSS_SITE_IFRAME` - Set to `true` to embed TasmoAdmin in another HTTPS site, such as Home Assistant or Organizr; HTTP requests remain restricted
+- `TASMO_DB_URI` - Database for devices and settings. Defaults to an SQLite file, `tasmoadmin.db`, in the data directory. Examples:
+  - `sqlite:////data/tasmoadmin/tasmoadmin.db`
+  - `mysql://tasmoadmin:secret@mariadb.example:3306/tasmoadmin` (MariaDB or MySQL; `mariadb://` works too)
+  - `postgres://tasmoadmin:secret@postgres.example:5432/tasmoadmin` (add `?sslmode=require` for TLS)
+- `TASMO_DB_URI_FILE` - Path of a file containing the database URI, for Docker secrets. Used when `TASMO_DB_URI` is not set
+- `TASMO_STORAGE` - Set to `files` to keep using `devices.csv` and `MyConfig.json` instead of a database
+
+### Database
+
+On the first start with a database, TasmoAdmin creates its tables (all named `ta_*`, so the database can be shared with other applications) and imports `devices.csv` and `MyConfig.json` from the data directory. The files are kept, renamed to `devices.csv.migrated` and `MyConfig.json.migrated`. If the database already contains devices or settings, nothing is imported.
+
+Device passwords stay encrypted in the database with the same key as before (`TASMO_DEVICE_PASSWORD_KEY`, or the key file in the data directory), so keep the data directory or that variable when you move to a MariaDB or PostgreSQL server.
 
 ### Device Password Encryption
 
