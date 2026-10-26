@@ -1,6 +1,7 @@
 <?php
 
 use TasmoAdmin\Backup\BackupHelper;
+use TasmoAdmin\Database\DatabaseExporter;
 use TasmoAdmin\DevicePasswordKeyProvider;
 use TasmoAdmin\DeviceRepository;
 use TasmoAdmin\Helper\CacheCleanupHelper;
@@ -71,6 +72,44 @@ if (isset($_GET['downloadBackup'])) {
     ob_clean();
     flush();
     readfile($backup->getBackupZipPath());
+
+    exit;
+}
+
+if (isset($_GET['downloadStoredBackup'])) {
+    $backup = $container->get(BackupHelper::class)->getStore()?->get((int) $_GET['downloadStoredBackup']);
+    if (null === $backup || null === $backup->content) {
+        http_response_code(404);
+
+        exit;
+    }
+
+    $filename = sprintf('%s-%s', $backup->createdAt->format('Ymd-His'), basename($backup->filename));
+    header('Content-type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="'.str_replace('"', '', $filename).'"');
+    header('Content-Length: '.strlen($backup->content));
+    ob_clean();
+    flush();
+    echo $backup->content;
+
+    exit;
+}
+
+if (isset($_GET['exportDatabase'])) {
+    $connection = $container->get(StorageBackend::class)->getConnection();
+    if (null === $connection) {
+        http_response_code(404);
+
+        exit;
+    }
+
+    $export = (new DatabaseExporter($connection))->export();
+    header('Content-type: application/gzip');
+    header('Content-Disposition: attachment; filename="tasmoadmin-'.date('Ymd-His').'.json.gz"');
+    header('Content-Length: '.strlen($export));
+    ob_clean();
+    flush();
+    echo $export;
 
     exit;
 }

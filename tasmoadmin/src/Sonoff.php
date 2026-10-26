@@ -51,6 +51,20 @@ class Sonoff
         return $downloadFilePath;
     }
 
+    /**
+     * The firmware version reported by the device (Status 2), or '' when it does not answer.
+     */
+    public function getFirmwareVersion(Device $device): string
+    {
+        try {
+            $status = $this->doRequest($device, 'Status 2');
+        } catch (\Throwable) {
+            return '';
+        }
+
+        return (string) ($status->StatusFWR->Version ?? '');
+    }
+
     public function restore(Device $device, string $backupUrl): \stdClass
     {
         return $this->doRequest($device, sprintf('WebGetConfig %s', $backupUrl));

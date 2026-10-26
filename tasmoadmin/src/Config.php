@@ -58,6 +58,7 @@ class Config
         'mqtt_discovery_tele_prefix' => 'tele',
         'mqtt_discovery_subscriptions' => 'tele/+/LWT',
         'mqtt_discovery_timeout_seconds' => '5',
+        'backup_keep_count' => '10',
     ];
 
     private array $cachedConfig = [];

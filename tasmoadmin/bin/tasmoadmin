@@ -1,0 +1,158 @@
+#!/usr/bin/env php
+<?php
+
+use TasmoAdmin\Database\ConnectionFactory;
+use TasmoAdmin\Database\DatabaseExporter;
+use TasmoAdmin\Database\DatabaseUrl;
+use TasmoAdmin\Database\FileImporter;
+use TasmoAdmin\Database\Migrator;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+
+require dirname(__DIR__).'/vendor/autoload.php';
+
+$appRoot = dirname(__DIR__).'/';
+$dataDir = getenv('TASMO_DATADIR') ?: $appRoot.'data/';
+$tmpDir = getenv('TASMO_TMPDIR') ?: $appRoot.'tmp/';
+
+$usage = <<<'TXT'
+    Usage: tasmoadmin <command> [arguments] [--uri=<database uri>] [--force]
+
+      db:info                 Show the database in use and its row counts
+      db:migrate              Create or update the tables (and import devices.csv/MyConfig.json once)
+      db:export <file>        Export devices, settings and backups to <file> (gzip JSON)
+      db:import <file>        Replace everything in the database with the export in <file>
+      db:copy <from> <to>     Copy everything from database URI <from> to database URI <to>
+
+    Without --uri the database comes from TASMO_DB_URI / TASMO_DB_URI_FILE, or the SQLite
+    file in the data directory. db:import and db:copy refuse to overwrite a database that
+    already has devices or settings unless --force is given.
+
+    TXT;
+
+$arguments = array_slice($argv, 1);
+$options = ['uri' => null, 'force' => false];
+$positional = [];
+foreach ($arguments as $argument) {
+    if (str_starts_with($argument, '--uri=')) {
+        $options['uri'] = substr($argument, 6);
+    } elseif ('--force' === $argument) {
+        $options['force'] = true;
+    } elseif (in_array($argument, ['-h', '--help'], true)) {
+        fwrite(STDOUT, $usage);
+
+        exit(0);
+    } else {
+        $positional[] = $argument;
+    }
+}
+
+$command = array_shift($positional);
+
+$open = static function (?string $uri) use ($dataDir): array {
+    $url = null === $uri ? DatabaseUrl::fromEnvironment($dataDir) : new DatabaseUrl($uri);
+    $connection = ConnectionFactory::create($url);
+    (new Migrator($connection))->migrateIfNeeded();
+
+    return [$url, $connection];
+};
+
+$hasData = static function (DatabaseExporter $exporter): bool {
+    foreach ($exporter->counts() as $count) {
+        if ($count > 0) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+$printCounts = static function (array $counts): void {
+    foreach ($counts as $table => $count) {
+        fwrite(STDOUT, sprintf("  %-20s %d\n", $table, $count));
+    }
+};
+
+try {
+    switch ($command) {
+        case 'db:info':
+            [$url, $connection] = $open($options['uri']);
+            fwrite(STDOUT, 'Database: '.$url->redacted()."\n");
+            fwrite(STDOUT, 'Schema version: '.(new Migrator($connection))->getMeta('schema_version')."\n");
+            $printCounts((new DatabaseExporter($connection))->counts());
+
+            break;
+
+        case 'db:migrate':
+            $url = null === $options['uri'] ? DatabaseUrl::fromEnvironment($dataDir) : new DatabaseUrl($options['uri']);
+            $connection = ConnectionFactory::create($url);
+            $migrator = new Migrator($connection);
+            $statements = $migrator->migrate();
+            fwrite(STDOUT, sprintf("%s: %d schema statements executed.\n", $url->redacted(), count($statements)));
+            $imported = (new FileImporter($connection, $migrator, $dataDir, $tmpDir))->importIfNeeded();
+            if (null !== $imported) {
+                fwrite(STDOUT, sprintf("Imported %d devices and %d settings from the data directory.\n", $imported['devices'], $imported['settings']));
+            }
+
+            break;
+
+        case 'db:export':
+            $file = $positional[0] ?? null;
+            if (null === $file) {
+                throw new InvalidArgumentException('db:export needs a file name.');
+            }
+            [$url, $connection] = $open($options['uri']);
+            $exporter = new DatabaseExporter($connection);
+            if (false === file_put_contents($file, $exporter->export())) {
+                throw new RuntimeException('Could not write '.$file);
+            }
+            fwrite(STDOUT, sprintf("Exported %s to %s:\n", $url->redacted(), $file));
+            $printCounts($exporter->counts());
+
+            break;
+
+        case 'db:import':
+            $file = $positional[0] ?? null;
+            if (null === $file || !is_readable($file)) {
+                throw new InvalidArgumentException('db:import needs a readable export file.');
+            }
+            [$url, $connection] = $open($options['uri']);
+            $exporter = new DatabaseExporter($connection);
+            if ($hasData($exporter) && !$options['force']) {
+                throw new RuntimeException($url->redacted().' already has data; add --force to replace it.');
+            }
+            $counts = $exporter->import((string) file_get_contents($file));
+            fwrite(STDOUT, sprintf("Imported %s into %s:\n", $file, $url->redacted()));
+            $printCounts($counts);
+
+            break;
+
+        case 'db:copy':
+            if (2 !== count($positional)) {
+                throw new InvalidArgumentException('db:copy needs a source and a target database URI.');
+            }
+            [$fromUrl, $from] = $open($positional[0]);
+            [$toUrl, $to] = $open($positional[1]);
+            $target = new DatabaseExporter($to);
+            if ($hasData($target) && !$options['force']) {
+                throw new RuntimeException($toUrl->redacted().' already has data; add --force to replace it.');
+            }
+            $counts = $target->import((new DatabaseExporter($from))->export());
+            fwrite(STDOUT, sprintf("Copied %s to %s:\n", $fromUrl->redacted(), $toUrl->redacted()));
+            $printCounts($counts);
+
+            break;
+
+        default:
+            fwrite(null === $command ? STDOUT : STDERR, $usage);
+
+            exit(null === $command ? 0 : 2);
+    }
+} catch (Throwable $exception) {
+    $message = (string) preg_replace('#([a-z0-9+.-]+://[^:/@\s]+):[^@\s]*@#i', '$1:***@', $exception->getMessage());
+    fwrite(STDERR, 'Error: '.$message."\n");
+
+    exit(1);
+}

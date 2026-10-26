@@ -128,6 +128,7 @@ $themeToggleMarkup = ob_get_clean();
 								        'device_config',
 								        'device_action',
 								        'devices_autoscan',
+								        'backups',
 								    ]
 								) ? 'active' : ''; ?>"
 								   href="#"
@@ -154,6 +155,11 @@ $themeToggleMarkup = ob_get_clean();
 									   href="<?php echo _BASEURL_; ?>devices_autoscan"
 									>
 										<?php echo __('DEVICES_AUTOSCAN', 'NAVI'); ?>
+									</a>
+									<a class="dropdown-item nav-link <?php echo 'backups' == $page ? 'active' : ''; ?>"
+									   href="<?php echo _BASEURL_; ?>backups"
+									>
+										<?php echo __('BACKUPS', 'NAVI'); ?>
 									</a>
 								</div>
 							</li>
